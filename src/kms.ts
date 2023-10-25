@@ -199,7 +199,7 @@ export class KmsClient {
    * @param {ObjectType} objectType the objectType of the Object
    * @param {KmsObject} object the KMIP Object instance
    * @param {boolean} replaceExisting replace the existing object
-   * @param {KeyWrapType} keyWrapType
+   * @param {KeyWrapType} keyWrapType determines the Key Wrap Type of the returned key value.
    * @returns {string} the unique identifier
    */
   public async importObject(
@@ -336,7 +336,6 @@ export class KmsClient {
    * Import a X509 certificate or a private key (both as PEM encoded)
    * @param {string} uniqueIdentifier  the unique identifier of the key
    * @param {Uint8Array} pemBytes the PEM certificate/private key as bytes
-   * @param certificateBytes
    * @param {string[]} tags potential list of tags
    * @param {boolean} replaceExisting replace the existing object
    * @returns {string}  the unique identifier of the key
@@ -961,7 +960,7 @@ export class KmsClient {
    * attributes.
    * Rekeyed User Decryption Keys however will be able to decrypt data encrypted by the previous Master Public Key and
    * the rekeyed one.
-   * Note: there is a limit on the number of revocations that can be performed which is set in the {@link Policy} when
+   * Note: there is a limit on the number of revocations that can be performed which is set in the Policy when
    * Master Keys are created
    * @param {string} privateMasterKeyUniqueIdentifier the unique identifier of the Private Master Key
    * @param {string[]} attributes to rotate e.g. ["Department::MKG", "Department::FIN"]

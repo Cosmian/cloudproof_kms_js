@@ -17,9 +17,8 @@ import {
   deserialize,
   fromTTLV,
   serialize,
-  toTTLV
+  toTTLV,
 } from ".."
-
 
 import { beforeAll, expect, test } from "vitest"
 import {
@@ -158,7 +157,6 @@ test(
 test(
   "KMS Symmetric Key manipulation",
   async () => {
-
     // create
     const uniqueIdentifier = await client.createSymmetricKey(
       SymmetricKeyAlgorithm.AES,

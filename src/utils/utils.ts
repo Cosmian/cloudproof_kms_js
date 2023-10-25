@@ -134,8 +134,8 @@ export function bytesEquals(
 }
 
 /**
- *
- * @param value
+ * @param {string | Uint8Array} value to convert
+ * @returns value as bytes
  */
 export function toBytes(value: string | Uint8Array): Uint8Array {
   if (typeof value === "string") {
