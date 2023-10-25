@@ -1,4 +1,4 @@
-# Cloudproof Javascript Library
+# Cloudproof Kms Javascript Library
 
 ![Build status](https://github.com/Cosmian/cloudproof_js/actions/workflows/ci.yml/badge.svg)
 
