@@ -20,6 +20,7 @@ import {
   toTTLV,
 } from ".."
 
+import "dotenv/config"
 import { beforeAll, expect, test } from "vitest"
 import {
   NIST_P256_CERTIFICATE,
@@ -27,6 +28,7 @@ import {
 } from "./data/certificates"
 
 const kmsToken = process.env.AUTH0_TOKEN_1
+console.log(process.env)
 let client: KmsClient
 
 beforeAll(async () => {
@@ -343,7 +345,7 @@ test(
       unwrappedKey.type === "CertificateRequest" ||
       unwrappedKey.type === "OpaqueObject"
     ) {
-      throw new Error(`The KmsObject ${initialKey.type} cannot be unwrapped.`)
+      throw new Error(`The KmsObject ${unwrappedKey.type} cannot be unwrapped.`)
     }
     if (
       !(unwrappedKey.value.keyBlock.keyValue instanceof KeyValue) ||
