@@ -1,0 +1,48 @@
+---
+name: Cloudproof Javascript Library
+
+on:
+  workflow_call:
+    inputs:
+      subcommands:
+        required: true
+        type: string
+      kms-version:
+        required: true
+        type: string
+      kms-jwe-key:
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  js-in-docker:
+    runs-on: ubuntu-latest
+    container: cosmian/node_ci_puppeteer
+
+    services:
+      kms:
+        image: ghcr.io/cosmian/kms:${{ inputs.kms-version }}
+        env:
+          JWK_PRIVATE_KEY: ${{ inputs.kms-jwe-key }}
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Cache build
+        uses: actions/cache@v3
+        with:
+          path: |
+            /github/home/.cache/puppeteer
+            node_modules
+            dist
+            src/pkg
+          key: ${{ runner.os }}-docker-node-${{ hashFiles('package.json') }}-${{ hashFiles('src/**', '!.git') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-node-${{ hashFiles('package.json') }}-${{ hashFiles('src/**', '!.git') }}
+
+      - name: Test (no Auth0)
+        run: ${{ inputs.subcommands }}
+        env:
+          KMS_HOST: kms

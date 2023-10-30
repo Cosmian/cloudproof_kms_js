@@ -1,0 +1,77 @@
+---
+name: CI
+on: push
+
+jobs:
+  build:
+    uses: ./.github/workflows/js.yml
+    with:
+      subcommands: |
+        npm install
+
+  build_in_docker:
+    uses: ./.github/workflows/js_in_docker.yml
+    with:
+      subcommands: |
+        npm install
+      kms-version: 4.8.0
+
+  lint:
+    needs: build
+    uses: ./.github/workflows/js.yml
+    with:
+      subcommands: |
+        npm run prettier:check
+        npm run lint
+
+  test:
+    name: vitest with Auth0
+    needs: build_in_docker
+    uses: ./.github/workflows/js_in_docker_with_auth0.yml
+    with:
+      subcommands: |
+        npm test
+      kms-version: 4.8.0
+      kms-jwe-key:
+        '{"kty": "OKP","d": "MPEVJwdRqGM_qhJOUb5hR0Xr9EvwMLZGnkf-eDj5fU8","use": "enc","crv": "X25519","kid": "DX3GC+Fx3etxfRJValQNbqaB0gs=","x":
+        "gdF-1TtAjsFqNWr9nwhGUlFG38qrDUqYgcILgtYrpTY","alg": "ECDH-ES"}'
+    secrets: inherit
+
+  publish-dry-run:
+    needs:
+      - lint
+    uses: ./.github/workflows/js.yml
+    with:
+      subcommands: |
+        echo "//registry.npmjs.org/:_authToken=$NPM_ACCESS_TOKEN" > ~/.npmrc
+        npm publish --dry-run
+    secrets: inherit
+
+  publish:
+    needs:
+      - publish-dry-run
+    uses: ./.github/workflows/js.yml
+    if: startsWith(github.ref, 'refs/tags/')
+    with:
+      subcommands: |
+        echo "//registry.npmjs.org/:_authToken=$NPM_ACCESS_TOKEN" > ~/.npmrc
+        npm publish
+    secrets: inherit
+
+  release:
+    needs:
+      - publish-dry-run
+    name: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+
+  cleanup:
+    needs:
+      - publish
+    uses: Cosmian/reusable_workflows/.github/workflows/cleanup_cache.yml@main
+    if: startsWith(github.ref, 'refs/tags/')
+    secrets: inherit
