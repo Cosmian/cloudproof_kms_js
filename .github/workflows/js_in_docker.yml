@@ -46,12 +46,3 @@ jobs:
         run: ${{ inputs.subcommands }}
         env:
           KMS_HOST: kms
-
-      - name: Upload non-regression test vectors
-        if: inputs.regression_files != ''
-        uses: actions/upload-artifact@v3
-        with:
-          name: cloudproof_kms_js
-          path: ${{ inputs.regression_files }}
-          retention-days: 1
-          if-no-files-found: error
