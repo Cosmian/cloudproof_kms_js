@@ -28,7 +28,6 @@ import {
 } from "./data/certificates"
 
 const kmsToken = process.env.AUTH0_TOKEN_1
-console.log(process.env)
 let client: KmsClient
 
 beforeAll(async () => {
