@@ -18,7 +18,7 @@ import {
   fromTTLV,
   serialize,
   toTTLV,
-} from ".."
+} from "../src"
 
 import "dotenv/config"
 import { beforeAll, expect, test } from "vitest"
