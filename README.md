@@ -36,3 +36,4 @@ This table shows the minimum KMS version correspondence.
 | `cloudproof_kms_js` | KMS Server |
 | ------------------- | ---------- |
 | 1.0.0               | 4.8.0      |
+| 1.0.1               | 4.8.0      |
