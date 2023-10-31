@@ -37,3 +37,4 @@ This table shows the minimum KMS version correspondence.
 | ------------------- | ---------- |
 | 1.0.0               | 4.8.0      |
 | 1.0.1               | 4.8.0      |
+| 1.0.2               | 4.8.0      |
