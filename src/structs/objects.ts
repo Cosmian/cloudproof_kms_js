@@ -39,6 +39,10 @@ export class Certificate {
     this.certificateType = certificateType
     this.certificateValue = certificateValue
   }
+
+  bytes(): Uint8Array {
+    return this.certificateValue
+  }
 }
 
 export enum CertificateRequestType {
