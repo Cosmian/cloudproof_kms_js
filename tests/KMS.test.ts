@@ -1,5 +1,6 @@
 import {
   Attributes,
+  Certificate,
   Create,
   CryptographicAlgorithm,
   CryptographicUsageMask,
@@ -20,6 +21,7 @@ import {
   toTTLV,
 } from "../src"
 
+import { toByteArray } from "base64-js"
 import "dotenv/config"
 import { beforeAll, expect, test } from "vitest"
 import {
@@ -203,7 +205,7 @@ test(
     try {
       await client.retrieveSymmetricKey(uid)
     } catch (error) {
-      expect(error).toMatch(/(Item not found)/i)
+      expect(error).toMatch(/(Item_not_found)/i)
     }
     // destroy
     await client.destroySymmetricKey(uid)
@@ -261,7 +263,7 @@ test(
     try {
       await client2.getObject(keyId)
     } catch (error) {
-      expect(error).toMatch(/(Item not found)/i)
+      expect(error).toMatch(/(Item_not_found)/i)
     }
 
     // Grant access to another user, to get this object
@@ -280,7 +282,7 @@ test(
     try {
       await client2.getObject(keyId)
     } catch (error) {
-      expect(error).toMatch(/(Item not found)/i)
+      expect(error).toMatch(/(Item_not_found)/i)
     }
   },
   {
@@ -292,16 +294,16 @@ test(
   "KMS Export wrapping key and Import unwrapping key",
   async () => {
     // Import certificate and private key
-    const importedCertificateUniqueIdentifier = await client.importPem(
+    const importedCertificateUniqueIdentifier = await client.importDer(
       "my_cert_id",
-      new TextEncoder().encode(NIST_P256_CERTIFICATE),
+      toByteArray(NIST_P256_CERTIFICATE),
       ["certificate", "x509"],
       true,
     )
 
-    await client.importPem(
+    await client.importDer(
       "my_private_key_id",
-      new TextEncoder().encode(NIST_P256_PRIVATE_KEY),
+      toByteArray(NIST_P256_PRIVATE_KEY),
       ["private key", "x509"],
       true,
     )
@@ -367,16 +369,16 @@ test(
   async () => {
     const keyUid = await client.createSymmetricKey()
 
-    const importedCertificateUniqueIdentifier = await client.importPem(
+    const importedCertificateUniqueIdentifier = await client.importDer(
       "my_cert_id",
-      new TextEncoder().encode(NIST_P256_CERTIFICATE),
+      toByteArray(NIST_P256_CERTIFICATE),
       ["certificate", "x509"],
       true,
     )
 
-    await client.importPem(
+    await client.importDer(
       "my_private_key_id",
-      new TextEncoder().encode(NIST_P256_PRIVATE_KEY),
+      toByteArray(NIST_P256_PRIVATE_KEY),
       ["private key", "x509"],
       true,
     )
@@ -420,6 +422,29 @@ test(
     timeout: 10 * 1000,
   },
 )
+
+test("Import, get, re-Import certificate", async () => {
+  await client.importDer(
+    "my_cert_id",
+    toByteArray(NIST_P256_CERTIFICATE),
+    ["certificate", "x509"],
+    true,
+  )
+
+  const certificate = await client.getObject("my_cert_id")
+  expect(certificate.type).toEqual("Certificate")
+  if (!(certificate.value instanceof Certificate)) {
+    throw new Error(`KmsObject should be a Certificate object.`)
+  }
+
+  // Re-import certificate
+  await client.importDer(
+    "my_cert_id2",
+    certificate.value.bytes(),
+    ["certificate", "x509"],
+    true,
+  )
+})
 
 test(
   "KMS With JWE encryption",
