@@ -33,8 +33,9 @@ npm i cloudproof_kms_js
 
 This table shows the minimum KMS version correspondence.
 
-| `cloudproof_kms_js` | KMS Server |
-| ------------------- | ---------- |
-| 1.0.0               | 4.8.0      |
-| 1.0.1               | 4.8.0      |
-| 1.0.2               | 4.8.0      |
+| `cloudproof_kms_js` | KMS Server  |
+|---------------------|-------------|
+| 1.0.0               | 4.8.0       |
+| 1.0.1               | 4.8.0       |
+| 1.0.2               | 4.8.0,4.9.0 |
+| 2.0.0               | 4.9.1       |

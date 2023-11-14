@@ -333,23 +333,23 @@ export class KmsClient {
   }
 
   /**
-   * Import a X509 certificate or a private key (both as PEM encoded)
+   * Import a X509 certificate or a private key (both as DER encoded)
    * @param {string} uniqueIdentifier  the unique identifier of the key
-   * @param {Uint8Array} pemBytes the PEM certificate/private key as bytes
+   * @param {Uint8Array} derBytes the DER certificate/private key as bytes
    * @param {string[]} tags potential list of tags
    * @param {boolean} replaceExisting replace the existing object
    * @returns {string}  the unique identifier of the key
    */
-  public async importPem(
+  public async importDer(
     uniqueIdentifier: string,
-    pemBytes: Uint8Array,
+    derBytes: Uint8Array,
     tags: string[] = [],
     replaceExisting: boolean = false,
   ): Promise<string> {
     const attributes = new Attributes()
     attributes.objectType = "Certificate"
 
-    const pem = new Certificate(CertificateType.X509, pemBytes)
+    const der = new Certificate(CertificateType.X509, derBytes)
     if (tags.length > 0) {
       const enc = new TextEncoder()
       const vendor = new VendorAttributes(
@@ -364,7 +364,7 @@ export class KmsClient {
       uniqueIdentifier,
       attributes,
       attributes.objectType,
-      { type: "Certificate", value: pem },
+      { type: "Certificate", value: der },
       replaceExisting,
     )
   }
