@@ -5,11 +5,13 @@ import {
   CryptographicAlgorithm,
   CryptographicUsageMask,
   KMIPOperations,
+  KeyBlock,
   KeyFormatType,
   KeyValue,
   KmsClient,
   Link,
   LinkType,
+  PrivateKey,
   RecommendedCurve,
   SymmetricKey,
   SymmetricKeyAlgorithm,
@@ -175,17 +177,15 @@ test(
       CryptographicAlgorithm.AES,
     )
     expect(key.keyBlock.cryptographicLength).toEqual(256)
-    expect(key.keyBlock.keyFormatType).toEqual(
-      KeyFormatType.TransparentSymmetricKey,
-    )
+    expect(key.keyBlock.keyFormatType).toEqual(KeyFormatType.Raw)
     expect(key.keyBlock.keyValue).not.toBeNull()
     expect(key.keyBlock.keyValue).toBeInstanceOf(KeyValue)
 
     const keyValue = key?.keyBlock?.keyValue as KeyValue
-    expect(keyValue.keyMaterial).toBeInstanceOf(TransparentSymmetricKey)
+    expect(keyValue.keyMaterial).toBeInstanceOf(Uint8Array)
 
-    const sk = keyValue.keyMaterial as TransparentSymmetricKey
-    expect(sk.key.length).toEqual(32)
+    const sk = keyValue.keyMaterial as Uint8Array
+    expect(sk.length).toEqual(32)
 
     // import
     const uid = await client.importSymmetricKey(
@@ -205,7 +205,7 @@ test(
     try {
       await client.retrieveSymmetricKey(uid)
     } catch (error) {
-      expect(error).toMatch(/(Item_not_found)/i)
+      expect(error).toMatch(/(Item not found)/i)
     }
     // destroy
     await client.destroySymmetricKey(uid)
@@ -263,7 +263,7 @@ test(
     try {
       await client2.getObject(keyId)
     } catch (error) {
-      expect(error).toMatch(/(Item_not_found)/i)
+      expect(error).toMatch(/(Item not found)/i)
     }
 
     // Grant access to another user, to get this object
@@ -282,7 +282,7 @@ test(
     try {
       await client2.getObject(keyId)
     } catch (error) {
-      expect(error).toMatch(/(Item_not_found)/i)
+      expect(error).toMatch(/(Item not found)/i)
     }
   },
   {
@@ -294,20 +294,51 @@ test(
   "KMS Export wrapping key and Import unwrapping key",
   async () => {
     // Import certificate and private key
-    const importedCertificateUniqueIdentifier = await client.importDer(
+    const importedCertificateUniqueIdentifier = await client.importCertificate(
       "my_cert_id",
       toByteArray(NIST_P256_CERTIFICATE),
+      "my_private_key_id",
       ["certificate", "x509"],
       true,
     )
 
-    await client.importDer(
+    // const privateKey = toByteArray(NIST_P256_PRIVATE_KEY)
+    // // const c  = new KeyValue(keyValue, new Attributes())
+    // const c = new KeyValue(keyValue, null)
+    // const b = new KeyBlock(
+    //   KeyFormatType.ECPrivateKey,
+    //   c,
+    //   CryptographicAlgorithm.EC,
+    //   keyValue.length,
+    //   null,
+    // )
+    // const a = new PrivateKey(b)
+
+    // const attributes = new Attributes()
+    // attributes.objectType = "PrivateKey"
+    // attributes.link = [
+    //   new Link(LinkType.CertificateLink, importedCertificateUniqueIdentifier),
+    // ]
+    // attributes.cryptographicAlgorithm = CryptographicAlgorithm.EC
+    // attributes.cryptographicLength = keyValue.length * 8
+    // attributes.keyFormatType = KeyFormatType.ECPrivateKey
+    // attributes.cryptographicUsageMask = CryptographicUsageMask.Decrypt
+
+    // await client.importObject(
+    //   "my_private_key_id",
+    //   attributes,
+    //   attributes.objectType,
+    //   { type: "PrivateKey", value: a },
+    //   true,
+    // )
+
+    await client.importPrivateKey(
       "my_private_key_id",
       toByteArray(NIST_P256_PRIVATE_KEY),
+      "my_cert_id",
       ["private key", "x509"],
       true,
     )
-
     // Export key while wrapping it using certificate
     const keyUniqueIdentifier = await client.createSymmetricKey()
 
@@ -369,16 +400,18 @@ test(
   async () => {
     const keyUid = await client.createSymmetricKey()
 
-    const importedCertificateUniqueIdentifier = await client.importDer(
+    const importedCertificateUniqueIdentifier = await client.importCertificate(
       "my_cert_id",
       toByteArray(NIST_P256_CERTIFICATE),
+      "my_private_key_id",
       ["certificate", "x509"],
       true,
     )
 
-    await client.importDer(
+    await client.importPrivateKey(
       "my_private_key_id",
       toByteArray(NIST_P256_PRIVATE_KEY),
+      "my_cert_id",
       ["private key", "x509"],
       true,
     )
@@ -424,9 +457,10 @@ test(
 )
 
 test("Import, get, re-Import certificate", async () => {
-  await client.importDer(
+  await client.importCertificate(
     "my_cert_id",
     toByteArray(NIST_P256_CERTIFICATE),
+    "",
     ["certificate", "x509"],
     true,
   )
@@ -438,9 +472,10 @@ test("Import, get, re-Import certificate", async () => {
   }
 
   // Re-import certificate
-  await client.importDer(
+  await client.importCertificate(
     "my_cert_id2",
     certificate.value.bytes(),
+    "",
     ["certificate", "x509"],
     true,
   )

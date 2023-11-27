@@ -336,19 +336,25 @@ export class KmsClient {
    * Import a X509 certificate or a private key (both as DER encoded)
    * @param {string} uniqueIdentifier  the unique identifier of the key
    * @param {Uint8Array} derBytes the DER certificate/private key as bytes
+   * @param {string} privateKeyIdentifier the private key id in order to create the link with the private key
    * @param {string[]} tags potential list of tags
    * @param {boolean} replaceExisting replace the existing object
    * @returns {string}  the unique identifier of the key
    */
-  public async importDer(
+  public async importCertificate(
     uniqueIdentifier: string,
     derBytes: Uint8Array,
+    privateKeyIdentifier: string = "",
     tags: string[] = [],
     replaceExisting: boolean = false,
   ): Promise<string> {
     const attributes = new Attributes()
     attributes.objectType = "Certificate"
-
+    if (privateKeyIdentifier.length > 0) {
+      attributes.link = [
+        new Link(LinkType.PrivateKeyLink, privateKeyIdentifier),
+      ]
+    }
     const der = new Certificate(CertificateType.X509, derBytes)
     if (tags.length > 0) {
       const enc = new TextEncoder()
@@ -365,6 +371,63 @@ export class KmsClient {
       attributes,
       attributes.objectType,
       { type: "Certificate", value: der },
+      replaceExisting,
+    )
+  }
+
+  /**
+   * Import a X509 certificate or a private key (both as DER encoded)
+   * @param {string} uniqueIdentifier  the unique identifier of the key
+   * @param {Uint8Array} derBytes the DER certificate/private key as bytes
+   * @param {string} certificateIdentifier the private key id in order to create the link with the private key
+   * @param {string[]} tags potential list of tags
+   * @param {boolean} replaceExisting replace the existing object
+   * @returns {string}  the unique identifier of the key
+   */
+  public async importPrivateKey(
+    uniqueIdentifier: string,
+    derBytes: Uint8Array,
+    certificateIdentifier: string = "",
+    tags: string[] = [],
+    replaceExisting: boolean = false,
+  ): Promise<string> {
+    const attributes = new Attributes()
+    attributes.objectType = "PrivateKey"
+    if (certificateIdentifier.length > 0) {
+      attributes.link = [
+        new Link(LinkType.CertificateLink, certificateIdentifier),
+      ]
+    }
+    // attributes.cryptographicAlgorithm = CryptographicAlgorithm.EC
+    attributes.cryptographicLength = derBytes.length * 8
+    // attributes.keyFormatType = KeyFormatType.ECPrivateKey
+    attributes.cryptographicUsageMask =
+      CryptographicUsageMask.Decrypt | CryptographicUsageMask.Encrypt
+
+    const privateKey = new PrivateKey(
+      new KeyBlock(
+        KeyFormatType.ECPrivateKey,
+        new KeyValue(derBytes, attributes),
+        CryptographicAlgorithm.EC,
+        derBytes.length * 8,
+        null,
+      ),
+    )
+    if (tags.length > 0) {
+      const enc = new TextEncoder()
+      const vendor = new VendorAttributes(
+        VendorAttributes.VENDOR_ID_COSMIAN,
+        VendorAttributes.TAG,
+        enc.encode(JSON.stringify(tags)),
+      )
+      attributes.vendorAttributes.push(vendor)
+    }
+
+    return await this.importObject(
+      uniqueIdentifier,
+      attributes,
+      attributes.objectType,
+      { type: "PrivateKey", value: privateKey },
       replaceExisting,
     )
   }
@@ -1020,7 +1083,7 @@ export class KmsClient {
   /**
    * Import key - with or without unwrapping
    * @param uniqueIdentifier the unique identifier of the object to import
-   * @param wrappedObject wrapped objectto import
+   * @param wrappedObject wrapped object to import
    * @param unwrap boolean true if object must be unwrapped before importing
    * @param encryptionKeyUniqueIdentifier if unwrap is true, uniqueIdentifier used to unwrap key can be overwritten with a specific one
    * @param replaceExisting boolean replacing if existing object
