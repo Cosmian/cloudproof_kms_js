@@ -336,23 +336,29 @@ export class KmsClient {
    * Import a X509 certificate or a private key (both as DER encoded)
    * @param {string} uniqueIdentifier  the unique identifier of the key
    * @param {Uint8Array} derBytes the DER certificate/private key as bytes
-   * @param {string} privateKeyIdentifier the private key id in order to create the link with the private key
    * @param {string[]} tags potential list of tags
    * @param {boolean} replaceExisting replace the existing object
+   * @param options Additional optional options
+   * @param {string} options.privateKeyIdentifier the private key id in order to create the link with the private key
    * @returns {string}  the unique identifier of the key
    */
   public async importCertificate(
     uniqueIdentifier: string,
     derBytes: Uint8Array,
-    privateKeyIdentifier: string = "",
     tags: string[] = [],
     replaceExisting: boolean = false,
+    options: {
+      privateKeyIdentifier?: string
+    } = {},
   ): Promise<string> {
     const attributes = new Attributes()
     attributes.objectType = "Certificate"
-    if (privateKeyIdentifier.length > 0) {
+    if (
+      options.privateKeyIdentifier !== undefined &&
+      options.privateKeyIdentifier.length > 0
+    ) {
       attributes.link = [
-        new Link(LinkType.PrivateKeyLink, privateKeyIdentifier),
+        new Link(LinkType.PrivateKeyLink, options.privateKeyIdentifier),
       ]
     }
     const der = new Certificate(CertificateType.X509, derBytes)
@@ -379,37 +385,41 @@ export class KmsClient {
    * Import a X509 certificate or a private key (both as DER encoded)
    * @param {string} uniqueIdentifier  the unique identifier of the key
    * @param {Uint8Array} derBytes the DER certificate/private key as bytes
-   * @param {string} certificateIdentifier the private key id in order to create the link with the private key
    * @param {string[]} tags potential list of tags
    * @param {boolean} replaceExisting replace the existing object
+   * @param options Additional optional options
+   * @param {string} options.keyFormatType the key format type as specified in `object_data_structures.ts`
+   * @param {string} options.certificateIdentifier the private key id in order to create the link with the private key
    * @returns {string}  the unique identifier of the key
    */
   public async importPrivateKey(
     uniqueIdentifier: string,
     derBytes: Uint8Array,
-    certificateIdentifier: string = "",
     tags: string[] = [],
     replaceExisting: boolean = false,
+    options: {
+      keyFormatType?: KeyFormatType
+      certificateIdentifier?: string
+    } = {},
   ): Promise<string> {
     const attributes = new Attributes()
     attributes.objectType = "PrivateKey"
-    if (certificateIdentifier.length > 0) {
+    if (
+      options.certificateIdentifier !== undefined &&
+      options.certificateIdentifier.length > 0
+    ) {
       attributes.link = [
-        new Link(LinkType.CertificateLink, certificateIdentifier),
+        new Link(LinkType.CertificateLink, options.certificateIdentifier),
       ]
     }
-    // attributes.cryptographicAlgorithm = CryptographicAlgorithm.EC
     attributes.cryptographicLength = derBytes.length * 8
-    // attributes.keyFormatType = KeyFormatType.ECPrivateKey
-    attributes.cryptographicUsageMask =
-      CryptographicUsageMask.Decrypt | CryptographicUsageMask.Encrypt
 
     const privateKey = new PrivateKey(
       new KeyBlock(
-        KeyFormatType.ECPrivateKey,
+        options.keyFormatType ?? KeyFormatType.ECPrivateKey,
         new KeyValue(derBytes, attributes),
-        CryptographicAlgorithm.EC,
-        derBytes.length * 8,
+        null,
+        attributes.cryptographicLength,
         null,
       ),
     )

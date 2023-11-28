@@ -297,47 +297,21 @@ test(
     const importedCertificateUniqueIdentifier = await client.importCertificate(
       "my_cert_id",
       toByteArray(NIST_P256_CERTIFICATE),
-      "my_private_key_id",
       ["certificate", "x509"],
       true,
+      {
+        privateKeyIdentifier: "my_private_key_id",
+      },
     )
-
-    // const privateKey = toByteArray(NIST_P256_PRIVATE_KEY)
-    // // const c  = new KeyValue(keyValue, new Attributes())
-    // const c = new KeyValue(keyValue, null)
-    // const b = new KeyBlock(
-    //   KeyFormatType.ECPrivateKey,
-    //   c,
-    //   CryptographicAlgorithm.EC,
-    //   keyValue.length,
-    //   null,
-    // )
-    // const a = new PrivateKey(b)
-
-    // const attributes = new Attributes()
-    // attributes.objectType = "PrivateKey"
-    // attributes.link = [
-    //   new Link(LinkType.CertificateLink, importedCertificateUniqueIdentifier),
-    // ]
-    // attributes.cryptographicAlgorithm = CryptographicAlgorithm.EC
-    // attributes.cryptographicLength = keyValue.length * 8
-    // attributes.keyFormatType = KeyFormatType.ECPrivateKey
-    // attributes.cryptographicUsageMask = CryptographicUsageMask.Decrypt
-
-    // await client.importObject(
-    //   "my_private_key_id",
-    //   attributes,
-    //   attributes.objectType,
-    //   { type: "PrivateKey", value: a },
-    //   true,
-    // )
 
     await client.importPrivateKey(
       "my_private_key_id",
       toByteArray(NIST_P256_PRIVATE_KEY),
-      "my_cert_id",
       ["private key", "x509"],
       true,
+      {
+        certificateIdentifier: "my_cert_id",
+      },
     )
     // Export key while wrapping it using certificate
     const keyUniqueIdentifier = await client.createSymmetricKey()
@@ -403,17 +377,19 @@ test(
     const importedCertificateUniqueIdentifier = await client.importCertificate(
       "my_cert_id",
       toByteArray(NIST_P256_CERTIFICATE),
-      "my_private_key_id",
       ["certificate", "x509"],
       true,
+      {
+        privateKeyIdentifier: "my_private_key_id",
+      },
     )
 
     await client.importPrivateKey(
       "my_private_key_id",
       toByteArray(NIST_P256_PRIVATE_KEY),
-      "my_cert_id",
       ["private key", "x509"],
       true,
+      { certificateIdentifier: "my_cert_id" },
     )
 
     const wrappedKey = await client.getWrappedKey(
@@ -460,7 +436,6 @@ test("Import, get, re-Import certificate", async () => {
   await client.importCertificate(
     "my_cert_id",
     toByteArray(NIST_P256_CERTIFICATE),
-    "",
     ["certificate", "x509"],
     true,
   )
@@ -475,7 +450,6 @@ test("Import, get, re-Import certificate", async () => {
   await client.importCertificate(
     "my_cert_id2",
     certificate.value.bytes(),
-    "",
     ["certificate", "x509"],
     true,
   )

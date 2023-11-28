@@ -109,7 +109,7 @@ export enum CryptographicAlgorithm {
 export class KeyBlock {
   keyFormatType: KeyFormatType
   keyValue: Uint8Array | KeyValue | null = null
-  cryptographicAlgorithm: CryptographicAlgorithm
+  cryptographicAlgorithm: CryptographicAlgorithm | null = null
   cryptographicLength: number
   keyCompressionType: KeyCompressionType | null = null
   keyWrappingData: KeyWrappingData | null = null
@@ -117,7 +117,7 @@ export class KeyBlock {
   constructor(
     keyFormatType: KeyFormatType,
     keyValue: Uint8Array | KeyValue | null = null,
-    cryptographicAlgorithm: CryptographicAlgorithm,
+    cryptographicAlgorithm: CryptographicAlgorithm | null = null,
     cryptographicLength: number,
     keyCompressionType: KeyCompressionType | null = null,
     keyWrappingData: KeyWrappingData | null = null,
