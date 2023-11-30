@@ -333,14 +333,14 @@ export class KmsClient {
   }
 
   /**
-   * Import a X509 certificate or a private key (both as DER encoded)
-   * @param {string} uniqueIdentifier  the unique identifier of the key
-   * @param {Uint8Array} derBytes the DER certificate/private key as bytes
+   * Import a X509 certificate in DER encoding
+   * @param {string} uniqueIdentifier  the unique identifier of the certificate
+   * @param {Uint8Array} derBytes the DER certificate as bytes
    * @param {string[]} tags potential list of tags
    * @param {boolean} replaceExisting replace the existing object
    * @param options Additional optional options
-   * @param {string} options.privateKeyIdentifier the private key id in order to create the link with the private key
-   * @returns {string}  the unique identifier of the key
+   * @param {string} options.privateKeyIdentifier the link with the private key
+   * @returns {string}  the unique identifier of the certificate
    */
   public async importCertificate(
     uniqueIdentifier: string,
@@ -382,14 +382,14 @@ export class KmsClient {
   }
 
   /**
-   * Import a X509 certificate or a private key (both as DER encoded)
+   * Import a private key in DER encoding
    * @param {string} uniqueIdentifier  the unique identifier of the key
-   * @param {Uint8Array} derBytes the DER certificate/private key as bytes
+   * @param {Uint8Array} derBytes the DER private key as bytes
    * @param {string[]} tags potential list of tags
    * @param {boolean} replaceExisting replace the existing object
    * @param options Additional optional options
    * @param {string} options.keyFormatType the key format type as specified in `object_data_structures.ts`
-   * @param {string} options.certificateIdentifier the private key id in order to create the link with the private key
+   * @param {string} options.certificateIdentifier the link with the associated certificate
    * @returns {string}  the unique identifier of the key
    */
   public async importPrivateKey(
