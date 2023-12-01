@@ -5,18 +5,15 @@ import {
   CryptographicAlgorithm,
   CryptographicUsageMask,
   KMIPOperations,
-  KeyBlock,
   KeyFormatType,
   KeyValue,
   KmsClient,
   Link,
   LinkType,
-  PrivateKey,
   RecommendedCurve,
   SymmetricKey,
   SymmetricKeyAlgorithm,
   TransparentECPublicKey,
-  TransparentSymmetricKey,
   deserialize,
   fromTTLV,
   serialize,
@@ -289,6 +286,23 @@ test(
     timeout: 30 * 1000,
   },
 )
+
+test("KMS Import Private key with bad format type", async () => {
+  try {
+    await client.importPrivateKey(
+      "my_private_key_id",
+      toByteArray(NIST_P256_PRIVATE_KEY),
+      ["private key", "x509"],
+      true,
+      {
+        certificateIdentifier: "my_cert_id",
+        keyFormatType: KeyFormatType.CoverCryptPublicKey,
+      },
+    )
+  } catch (error) {
+    expect(error).toMatch(/(General_Failure)/i)
+  }
+})
 
 test(
   "KMS Export wrapping key and Import unwrapping key",
