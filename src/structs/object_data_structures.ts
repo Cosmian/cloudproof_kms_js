@@ -18,19 +18,19 @@ export enum KeyFormatType {
   TransparentDHPublicKey = 0x0d,
   TransparentECPrivateKey = 0x14,
   TransparentECPublicKey = 0x15,
-  PKCS12 = 0x016,
+  PKCS12 = 0x16,
   PKCS10 = 0x17,
-  McfeSecretKey = 0x8880_0001,
-  McfeMasterSecretKey = 0x8880_0002,
-  McfeFunctionalKey = 0x8880_0003,
-  McfeFksSecretKey = 0x8880_0004,
+  // Available slot 0x8880_0001,
+  // Available slot 0x8880_0002,
+  // Available slot 0x8880_0003,
+  // Available slot 0x8880_0004,
   EnclaveECKeyPair = 0x8880_0005,
   EnclaveECSharedKey = 0x8880_0006,
-  TFHE = 0x8880_0007,
-  AbeMasterSecretKey = 0x8880_0008,
-  AbeMasterPublicKey = 0x8880_0009,
-  AbeUserDecryptionKey = 0x8880_000a,
-  AbeSymmetricKey = 0x8880_000b,
+  // Available slot 0x8880_0007,
+  // Available slot 0x8880_0008,
+  // Available slot 0x8880_0009,
+  // Available slot 0x8880_000A,
+  // Available slot 0x8880_000B,
   CoverCryptSecretKey = 0x8880_000c,
   CoverCryptPublicKey = 0x8880_000d,
 }
@@ -44,7 +44,7 @@ export enum KeyCompressionType {
 
 export enum CryptographicAlgorithm {
   DES = 0x0000_0001,
-  THREEDES = 0x0000_0002,
+  THREE_DES = 0x0000_0002,
   AES = 0x0000_0003,
   RSA = 0x0000_0004,
   DSA = 0x0000_0005,
@@ -93,15 +93,15 @@ export enum CryptographicAlgorithm {
   GOSTR34132015 = 0x0000_0030,
   GOST2814789 = 0x0000_0031,
   XMSS = 0x0000_0032,
-  SPHINCS256 = 0x0000_0033,
-  Page166of230McEliece = 0x0000_0034,
+  SPHINCS_256 = 0x0000_0033,
+  Page166Of230McEliece = 0x0000_0034,
   McEliece6960119 = 0x0000_0035,
   McEliece8192128 = 0x0000_0036,
   Ed25519 = 0x0000_0037,
   Ed448 = 0x0000_0038,
-  LWE = 0x8880_0001,
-  TFHE = 0x8880_0002,
-  ABE = 0x8880_0003,
+  // Available slot 0x8880_0001,
+  // Available slot 0x8880_0002,
+  // Available slot 0x8880_0003,
   CoverCrypt = 0x8880_0004,
   CoverCryptBulk = 0x8880_0005,
 }
@@ -109,7 +109,7 @@ export enum CryptographicAlgorithm {
 export class KeyBlock {
   keyFormatType: KeyFormatType
   keyValue: Uint8Array | KeyValue | null = null
-  cryptographicAlgorithm: CryptographicAlgorithm
+  cryptographicAlgorithm: CryptographicAlgorithm | null = null
   cryptographicLength: number
   keyCompressionType: KeyCompressionType | null = null
   keyWrappingData: KeyWrappingData | null = null
@@ -117,7 +117,7 @@ export class KeyBlock {
   constructor(
     keyFormatType: KeyFormatType,
     keyValue: Uint8Array | KeyValue | null = null,
-    cryptographicAlgorithm: CryptographicAlgorithm,
+    cryptographicAlgorithm: CryptographicAlgorithm | null = null,
     cryptographicLength: number,
     keyCompressionType: KeyCompressionType | null = null,
     keyWrappingData: KeyWrappingData | null = null,
@@ -398,6 +398,8 @@ export enum RecommendedCurve {
   BRAINPOOLP512T1 = 0x0000_0044,
   CURVE25519 = 0x0000_0045,
   CURVE448 = 0x0000_0046,
+  CURVEED25519 = 0x8000_0001,
+  CURVEED448 = 0x8000_0002,
   // Extensions 8XXXXXXX
 }
 
