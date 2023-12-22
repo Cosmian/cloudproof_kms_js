@@ -470,6 +470,44 @@ test("Import, get, re-Import certificate", async () => {
 })
 
 test(
+  "Encrypt and decrypt key",
+  async () => {
+    const uid = await client.createSymmetricKey(SymmetricKeyAlgorithm.AES, 256)
+    const keyToWrap: SymmetricKey = await client.retrieveSymmetricKey(uid)
+
+    const uniqueIdentifier = await client.createSymmetricKey(
+      SymmetricKeyAlgorithm.AES,
+      256,
+    )
+
+    const wrappedKey = await client.encrypt(
+      uniqueIdentifier,
+      keyToWrap.bytes(),
+      {},
+    )
+
+    const decryptedKey = await client.decrypt(
+      uniqueIdentifier,
+      wrappedKey.data,
+      {
+        ivCounterNonce:
+          wrappedKey.ivCounterNonce != null
+            ? wrappedKey.ivCounterNonce
+            : undefined,
+        authenticatedEncryptionTag:
+          wrappedKey.authenticatedEncryptionTag != null
+            ? wrappedKey.authenticatedEncryptionTag
+            : undefined,
+      },
+    )
+    expect(decryptedKey).toEqual(keyToWrap.bytes())
+  },
+  {
+    timeout: 30 * 1000,
+  },
+)
+
+test(
   "KMS With JWE encryption",
   async () => {
     client.setEncryption({
