@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.2] - 2024-01-03
+
+### Bug Fixes
+
+- Add missing exports
+
 ## [3.0.1] - 2024-01-03
 
 ### Miscellaneous Tasks
