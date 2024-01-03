@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.1] - 2024-01-03
+
+### Miscellaneous Tasks
+
+- Add encrypt and decrypt functions
+
 ## [3.0.0] - 2023-12-11
 
 ### Features
