@@ -1,4 +1,5 @@
 import * as jose from "jose"
+import { EncryptResponse } from "responses/EncryptResponse"
 import { deserialize, serialize } from "./kmip"
 import { Create } from "./requests/Create"
 import { CreateKeyPair } from "./requests/CreateKeyPair"
@@ -472,6 +473,112 @@ export class KmsClient {
     reason: string,
   ): Promise<void> {
     return await this.revokeObject(uniqueIdentifier, reason)
+  }
+
+  /**
+   * Encrypt some data
+   * @param uniqueIdentifier the unique identifier of the key
+   * @param data to encrypt
+   * @param options optionnal fields for request
+   * @param options.cryptographicParameters cryptographic Parameters corresponding to the particular decryption method requested
+   * @param options.ivCounterNonce the initialization vector, counter or nonce to be used
+   * @param options.correlationValue specifies the existing stream or by-parts cryptographic operation
+   * @param options.initIndicator initial operation
+   * @param options.finalIndicator final operation
+   * @param options.authenticatedEncryptionAdditionalData Additional data to be authenticated
+   * @returns the ciphertext
+   */
+  public async encrypt(
+    uniqueIdentifier: string,
+    data: Uint8Array,
+    options: {
+      cryptographicParameters?: CryptographicParameters
+      ivCounterNonce?: Uint8Array
+      correlationValue?: Uint8Array
+      initIndicator?: boolean
+      finalIndicator?: boolean
+      authenticatedEncryptionAdditionalData?: Uint8Array | null
+    },
+  ): Promise<EncryptResponse> {
+    const dataToEncrypt = Uint8Array.from([...data])
+
+    const encrypted = new Encrypt(uniqueIdentifier, dataToEncrypt)
+
+    if (typeof options.cryptographicParameters !== "undefined") {
+      encrypted.cryptographicParameters = options.cryptographicParameters
+    }
+    if (typeof options.ivCounterNonce !== "undefined") {
+      encrypted.ivCounterNonce = options.ivCounterNonce
+    }
+    if (typeof options.correlationValue !== "undefined") {
+      encrypted.correlationValue = options.correlationValue
+    }
+    if (typeof options.initIndicator !== "undefined") {
+      encrypted.initIndicator = options.initIndicator
+    }
+    if (typeof options.finalIndicator !== "undefined") {
+      encrypted.finalIndicator = options.finalIndicator
+    }
+    if (typeof options.authenticatedEncryptionAdditionalData !== "undefined") {
+      encrypted.authenticatedEncryptionAdditionalData =
+        options.authenticatedEncryptionAdditionalData
+    }
+    return await this.post(encrypted)
+  }
+
+  /**
+   * Decrypt some data
+   * @param uniqueIdentifier the unique identifier of the key
+   * @param data to decrypt
+   * @param options optionnal fields for request
+   * @param options.cryptographicParameters cryptographic Parameters corresponding to the particular decryption method requested
+   * @param options.ivCounterNonce the initialization vector, counter or nonce to be used
+   * @param options.correlationValue specifies the existing stream or by-parts cryptographic operation
+   * @param options.initIndicator initial operation
+   * @param options.finalIndicator final operation
+   * @param options.authenticatedEncryptionAdditionalData additional data to be authenticated
+   * @param options.authenticatedEncryptionTag the tag that will be needed to authenticate the decrypted data
+   * @returns the ciphertext
+   */
+  public async decrypt(
+    uniqueIdentifier: string,
+    data: Uint8Array,
+    options: {
+      cryptographicParameters?: CryptographicParameters
+      ivCounterNonce?: Uint8Array
+      correlationValue?: Uint8Array
+      initIndicator?: boolean
+      finalIndicator?: boolean
+      authenticatedEncryptionTag?: Uint8Array
+      authenticatedEncryptionAdditionalData?: Uint8Array
+    },
+  ): Promise<Uint8Array> {
+    const dataToDecrypt = Uint8Array.from([...data])
+
+    const decrypted = new Decrypt(uniqueIdentifier, dataToDecrypt)
+    if (typeof options.cryptographicParameters !== "undefined") {
+      decrypted.cryptographicParameters = options.cryptographicParameters
+    }
+    if (typeof options.ivCounterNonce !== "undefined") {
+      decrypted.ivCounterNonce = options.ivCounterNonce
+    }
+    if (typeof options.correlationValue !== "undefined") {
+      decrypted.correlationValue = options.correlationValue
+    }
+    if (typeof options.initIndicator !== "undefined") {
+      decrypted.initIndicator = options.initIndicator
+    }
+    if (typeof options.finalIndicator !== "undefined") {
+      decrypted.finalIndicator = options.finalIndicator
+    }
+    if (typeof options.authenticatedEncryptionTag !== "undefined") {
+      decrypted.authenticatedEncryptionTag = options.authenticatedEncryptionTag
+    }
+    if (typeof options.authenticatedEncryptionAdditionalData !== "undefined") {
+      decrypted.authenticatedEncryptionAdditionalData =
+        options.authenticatedEncryptionAdditionalData
+    }
+    return (await this.post(decrypted)).data
   }
 
   /**
