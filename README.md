@@ -1,4 +1,4 @@
-# Cloudproof Kms Javascript Library
+# Cloudproof KMS Javascript Library
 
 ![Build status](https://github.com/Cosmian/cloudproof_js/actions/workflows/ci.yml/badge.svg?branch=main)
 
@@ -34,11 +34,10 @@ npm i cloudproof_kms_js
 This table shows the minimum KMS version correspondence.
 
 | `cloudproof_kms_js` | KMS Server  |
-|---------------------|-------------|
+| ------------------- | ----------- |
 | 1.0.0               | 4.8.0       |
 | 1.0.1               | 4.8.0       |
 | 1.0.2               | 4.8.0,4.9.0 |
 | 2.0.0               | 4.9.1       |
-| 3.0.0               | 4.10.0      |
-| 3.0.1               | 4.10.0      |
-| 3.0.2               | 4.10.0      |
+| 3.0.x               | 4.10.0      |
+| 3.1.0               | 4.11.0      |

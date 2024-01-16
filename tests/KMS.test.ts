@@ -14,6 +14,7 @@ import {
   SymmetricKey,
   SymmetricKeyAlgorithm,
   TransparentECPublicKey,
+  TransparentSymmetricKey,
   deserialize,
   fromTTLV,
   serialize,
@@ -174,15 +175,17 @@ test(
       CryptographicAlgorithm.AES,
     )
     expect(key.keyBlock.cryptographicLength).toEqual(256)
-    expect(key.keyBlock.keyFormatType).toEqual(KeyFormatType.Raw)
+    expect(key.keyBlock.keyFormatType).toEqual(
+      KeyFormatType.TransparentSymmetricKey,
+    )
     expect(key.keyBlock.keyValue).not.toBeNull()
     expect(key.keyBlock.keyValue).toBeInstanceOf(KeyValue)
 
     const keyValue = key?.keyBlock?.keyValue as KeyValue
-    expect(keyValue.keyMaterial).toBeInstanceOf(Uint8Array)
+    expect(keyValue.keyMaterial).toBeInstanceOf(TransparentSymmetricKey)
 
-    const sk = keyValue.keyMaterial as Uint8Array
-    expect(sk.length).toEqual(32)
+    const sk = keyValue.keyMaterial as TransparentSymmetricKey
+    expect(sk.key.length).toEqual(32)
 
     // import
     const uid = await client.importSymmetricKey(
@@ -410,6 +413,21 @@ test(
       keyUid,
       importedCertificateUniqueIdentifier,
     )
+
+    if (
+      wrappedKey.type === "Certificate" ||
+      wrappedKey.type === "CertificateRequest" ||
+      wrappedKey.type === "OpaqueObject"
+    ) {
+      throw new Error(`The KmsObject ${wrappedKey.type} is not a key.`)
+    }
+
+    if (
+      !(wrappedKey.value.keyBlock.keyValue instanceof KeyValue) ||
+      wrappedKey.value.keyBlock.keyValue.attributes == null
+    ) {
+      throw new Error(`KmsObject is missing the attributes property.`)
+    }
 
     // Key can be unwrapped directly specifying the private key id (matching the certificate)
     let unwrappedKeyUid = await client.importKey(

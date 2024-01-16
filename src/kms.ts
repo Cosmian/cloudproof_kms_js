@@ -27,6 +27,7 @@ import {
   KeyWrappingSpecification,
   TransparentSymmetricKey,
   WrappingMethod,
+  ByteString,
 } from "./structs/object_data_structures"
 import {
   AccessPolicyKms,
@@ -150,15 +151,27 @@ export class KmsClient {
   /**
    * Retrieve a KMIP Object from the KMS
    * @param uniqueIdentifier the unique identifier of the object
-   * @param keyWrappingSpecification specifies keys and other information for wrapping the returned object
+   * @param options Additional optional options
+   * @param options.unwrap does the key must be unwrapped
+   * @param options.keyWrappingSpecification specifies keys and other information for wrapping the returned object
+   * @param options.keyFormatType specifies the required format type (bytestring being the default value returned by server)
    * @returns an instance of the KMIP Object
    */
   public async getObject(
     uniqueIdentifier: string,
-    keyWrappingSpecification?: KeyWrappingSpecification,
+    options: {
+      unwrap?: boolean
+      keyWrappingSpecification?: KeyWrappingSpecification
+      keyFormatType?: KeyFormatType
+    } = {},
   ): Promise<KmsObject> {
     const response = await this.post(
-      new Get(uniqueIdentifier, keyWrappingSpecification),
+      new Get(
+        uniqueIdentifier,
+        options.unwrap ?? false,
+        options.keyWrappingSpecification,
+        options.keyFormatType,
+      ),
     )
     return response.object
   }
@@ -385,7 +398,7 @@ export class KmsClient {
   /**
    * Import a private key in DER encoding
    * @param {string} uniqueIdentifier  the unique identifier of the key
-   * @param {Uint8Array} derBytes the DER private key as bytes
+   * @param {Uint8Array} bytes the DER private key as bytes
    * @param {string[]} tags potential list of tags
    * @param {boolean} replaceExisting replace the existing object
    * @param options Additional optional options
@@ -395,7 +408,7 @@ export class KmsClient {
    */
   public async importPrivateKey(
     uniqueIdentifier: string,
-    derBytes: Uint8Array,
+    bytes: Uint8Array,
     tags: string[] = [],
     replaceExisting: boolean = false,
     options: {
@@ -413,12 +426,12 @@ export class KmsClient {
         new Link(LinkType.CertificateLink, options.certificateIdentifier),
       ]
     }
-    attributes.cryptographicLength = derBytes.length * 8
+    attributes.cryptographicLength = bytes.length * 8
 
     const privateKey = new PrivateKey(
       new KeyBlock(
         options.keyFormatType ?? KeyFormatType.ECPrivateKey,
-        new KeyValue(derBytes, attributes),
+        new KeyValue(new ByteString(bytes), attributes),
         null,
         attributes.cryptographicLength,
         null,
@@ -453,7 +466,10 @@ export class KmsClient {
   public async retrieveSymmetricKey(
     uniqueIdentifier: string,
   ): Promise<SymmetricKey> {
-    const object = await this.getObject(uniqueIdentifier)
+    const object = await this.getObject(uniqueIdentifier, {
+      unwrap: false,
+      keyFormatType: KeyFormatType.TransparentSymmetricKey,
+    })
     if (object.type !== "SymmetricKey") {
       throw new Error(
         `The KMS server returned a ${object.type} instead of a SymmetricKey for the identifier ${uniqueIdentifier}`,
@@ -479,7 +495,7 @@ export class KmsClient {
    * Encrypt some data
    * @param uniqueIdentifier the unique identifier of the key
    * @param data to encrypt
-   * @param options optionnal fields for request
+   * @param options optional fields for request
    * @param options.cryptographicParameters cryptographic Parameters corresponding to the particular decryption method requested
    * @param options.ivCounterNonce the initialization vector, counter or nonce to be used
    * @param options.correlationValue specifies the existing stream or by-parts cryptographic operation
@@ -530,7 +546,7 @@ export class KmsClient {
    * Decrypt some data
    * @param uniqueIdentifier the unique identifier of the key
    * @param data to decrypt
-   * @param options optionnal fields for request
+   * @param options optional fields for request
    * @param options.cryptographicParameters cryptographic Parameters corresponding to the particular decryption method requested
    * @param options.ivCounterNonce the initialization vector, counter or nonce to be used
    * @param options.correlationValue specifies the existing stream or by-parts cryptographic operation
@@ -1180,6 +1196,8 @@ export class KmsClient {
    * Get and wrap
    * @param uniqueIdentifier the unique identifier of the object to get and wrap
    * @param encryptionKeyUniqueIdentifier the unique identifier to use to wrap the fetched key
+   * @param options Additional optional options
+   * @param options.keyFormatType specifies the required format type (bytestring being the default value returned by server)
    * @returns wrapped object
    */
   public async getWrappedKey(
@@ -1190,10 +1208,10 @@ export class KmsClient {
       WrappingMethod.Encrypt,
       new EncryptionKeyInformation(encryptionKeyUniqueIdentifier),
     )
-    const object = await this.getObject(
-      uniqueIdentifier,
+    const object = await this.getObject(uniqueIdentifier, {
+      unwrap: true,
       keyWrappingSpecification,
-    )
+    })
     return object
   }
 

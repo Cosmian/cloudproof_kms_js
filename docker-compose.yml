@@ -3,7 +3,7 @@ version: "3"
 services:
   kms:
     container_name: kms
-    image: ghcr.io/cosmian/kms:4.10.0
+    image: ghcr.io/cosmian/kms:feat-rsa_key_pair_generation
     ports:
       - 9998:9998
     environment:
