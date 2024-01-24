@@ -1272,7 +1272,7 @@ export class KmsClient {
   private async manageAccess(
     uniqueIdentifier: string,
     userIdentifier: string,
-    operationTypes: Array<KMIPOperations>,
+    operationTypes: KMIPOperations[],
     urlPath: string,
   ): Promise<Response> {
     const url = new URL(urlPath, this.url)
@@ -1298,12 +1298,13 @@ export class KmsClient {
    * @param uniqueIdentifier the unique identifier of the object to import
    * @param userIdentifier the unique identifier of the user to grant access to
    * @param operationType KMIP operation type to grant access for
+   * @param operationTypes
    * @returns response from KMS server
    */
   public async grantAccess(
     uniqueIdentifier: string,
     userIdentifier: string,
-    operationTypes: Array<KMIPOperations>,
+    operationTypes: KMIPOperations[],
   ): Promise<Response> {
     return await this.manageAccess(
       uniqueIdentifier,
@@ -1318,12 +1319,13 @@ export class KmsClient {
    * @param uniqueIdentifier the unique identifier of the object to import
    * @param userIdentifier the unique identifier of the user to revoke access to
    * @param operationType KMIP operation type to revoke access for
+   * @param operationTypes
    * @returns response from KMS server
    */
   public async revokeAccess(
     uniqueIdentifier: string,
     userIdentifier: string,
-    operationTypes: Array<KMIPOperations>,
+    operationTypes: KMIPOperations[],
   ): Promise<Response> {
     return await this.manageAccess(
       uniqueIdentifier,

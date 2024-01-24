@@ -168,8 +168,9 @@ test(
     expect(uniqueIdentifier).toBeTypeOf("string")
 
     // recover
-    const key: SymmetricKey =
-      await client.retrieveSymmetricKey(uniqueIdentifier)
+    const key: SymmetricKey = await client.retrieveSymmetricKey(
+      uniqueIdentifier,
+    )
     expect(key.keyBlock.cryptographicAlgorithm).toEqual(
       CryptographicAlgorithm.AES,
     )
