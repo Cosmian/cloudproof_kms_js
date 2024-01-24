@@ -168,9 +168,8 @@ test(
     expect(uniqueIdentifier).toBeTypeOf("string")
 
     // recover
-    const key: SymmetricKey = await client.retrieveSymmetricKey(
-      uniqueIdentifier,
-    )
+    const key: SymmetricKey =
+      await client.retrieveSymmetricKey(uniqueIdentifier)
     expect(key.keyBlock.cryptographicAlgorithm).toEqual(
       CryptographicAlgorithm.AES,
     )
@@ -267,7 +266,7 @@ test(
     }
 
     // Grant access to another user, to get this object
-    await client.grantAccess(keyId, "ci2@cosmian.com", KMIPOperations.get)
+    await client.grantAccess(keyId, "ci2@cosmian.com", [KMIPOperations.get])
     const fetchedKey = await client2.getObject(keyId)
     expect(fetchedKey).toEqual(key)
 
@@ -278,7 +277,7 @@ test(
     )
 
     // Revoke access to this user
-    await client.revokeAccess(keyId, "ci2@cosmian.com", KMIPOperations.get)
+    await client.revokeAccess(keyId, "ci2@cosmian.com", [KMIPOperations.get])
     try {
       await client2.getObject(keyId)
     } catch (error) {

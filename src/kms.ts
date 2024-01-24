@@ -1272,14 +1272,14 @@ export class KmsClient {
   private async manageAccess(
     uniqueIdentifier: string,
     userIdentifier: string,
-    operationType: KMIPOperations,
+    operationTypes: Array<KMIPOperations>,
     urlPath: string,
   ): Promise<Response> {
     const url = new URL(urlPath, this.url)
     const body = {
       unique_identifier: uniqueIdentifier,
       user_id: userIdentifier,
-      operation_type: operationType,
+      operation_types: operationTypes,
     }
     const response = await fetch(url, {
       method: "POST",
@@ -1303,12 +1303,12 @@ export class KmsClient {
   public async grantAccess(
     uniqueIdentifier: string,
     userIdentifier: string,
-    operationType: KMIPOperations,
+    operationTypes: Array<KMIPOperations>,
   ): Promise<Response> {
     return await this.manageAccess(
       uniqueIdentifier,
       userIdentifier,
-      operationType,
+      operationTypes,
       "access/grant",
     )
   }
@@ -1323,12 +1323,12 @@ export class KmsClient {
   public async revokeAccess(
     uniqueIdentifier: string,
     userIdentifier: string,
-    operationType: KMIPOperations,
+    operationTypes: Array<KMIPOperations>,
   ): Promise<Response> {
     return await this.manageAccess(
       uniqueIdentifier,
       userIdentifier,
-      operationType,
+      operationTypes,
       "access/revoke",
     )
   }
