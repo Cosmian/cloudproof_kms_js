@@ -1297,8 +1297,7 @@ export class KmsClient {
    * Grant access to a KmsObject for a specific user
    * @param uniqueIdentifier the unique identifier of the object to import
    * @param userIdentifier the unique identifier of the user to grant access to
-   * @param operationType KMIP operation type to grant access for
-   * @param operationTypes
+   * @param operationTypes KMIP operation types to grant access for
    * @returns response from KMS server
    */
   public async grantAccess(
@@ -1318,8 +1317,7 @@ export class KmsClient {
    * Revoke access to a KmsObject for a specific user
    * @param uniqueIdentifier the unique identifier of the object to import
    * @param userIdentifier the unique identifier of the user to revoke access to
-   * @param operationType KMIP operation type to revoke access for
-   * @param operationTypes
+   * @param operationTypes KMIP operation types to revoke access for
    * @returns response from KMS server
    */
   public async revokeAccess(
