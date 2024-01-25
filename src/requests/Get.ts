@@ -10,18 +10,15 @@ export class Get implements KmsRequest<GetResponse> {
   tag = "Get"
 
   uniqueIdentifier: string
-  unwrap: boolean | null
   keyWrappingSpecification: KeyWrappingSpecification | null = null
   keyFormatType: KeyFormatType | null = null
 
   constructor(
     uniqueIdentifier: string,
-    unwrap: boolean | null,
     keyWrappingSpecification: KeyWrappingSpecification | null = null,
     keyFormatType: KeyFormatType | null = null,
   ) {
     this.uniqueIdentifier = uniqueIdentifier
-    this.unwrap = unwrap
     this.keyWrappingSpecification = keyWrappingSpecification
     this.keyFormatType = keyFormatType
   }

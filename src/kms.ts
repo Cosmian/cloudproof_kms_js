@@ -152,7 +152,6 @@ export class KmsClient {
    * Retrieve a KMIP Object from the KMS
    * @param uniqueIdentifier the unique identifier of the object
    * @param options Additional options
-   * @param options.unwrap does the key must be unwrapped
    * @param options.keyWrappingSpecification specifies keys and other information for wrapping the returned object
    * @param options.keyFormatType specifies the required format type (bytestring being the default value returned by server)
    * @returns an instance of the KMIP Object
@@ -160,7 +159,6 @@ export class KmsClient {
   public async getObject(
     uniqueIdentifier: string,
     options: {
-      unwrap?: boolean
       keyWrappingSpecification?: KeyWrappingSpecification
       keyFormatType?: KeyFormatType
     } = {},
@@ -168,7 +166,6 @@ export class KmsClient {
     const response = await this.post(
       new Get(
         uniqueIdentifier,
-        options.unwrap ?? false,
         options.keyWrappingSpecification,
         options.keyFormatType,
       ),
@@ -467,7 +464,6 @@ export class KmsClient {
     uniqueIdentifier: string,
   ): Promise<SymmetricKey> {
     const object = await this.getObject(uniqueIdentifier, {
-      unwrap: false,
       keyFormatType: KeyFormatType.TransparentSymmetricKey,
     })
     if (object.type !== "SymmetricKey") {
@@ -1093,7 +1089,7 @@ export class KmsClient {
    * @param data multiple data to decrypt
    * @param {object} options Additional optional options to the encryption
    * @param {Uint8Array} options.authenticationData Data use to authenticate the encrypted value when decrypting (if use, should have been use during encryption)
-   * @returns header metadata and an array containing multiple plaintexts
+   * @returns header metadata and an array containing multiple plaintext
    */
   public async coverCryptBulkDecrypt(
     uniqueIdentifier: string,
