@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.0] - 2024-01-25
+
+### Features
+
+- Allow multiple operations for access management (#11)
+
+### Bug Fixes
+
+- In KMIP-Get operation, KeyFormatType must be editable (#10)
+
 ## [3.0.2] - 2024-01-03
 
 ### Bug Fixes

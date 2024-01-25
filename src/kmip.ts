@@ -21,6 +21,7 @@ import {
   VendorAttributes,
 } from "./structs/object_attributes"
 import {
+  ByteString,
   CryptographicAlgorithm,
   EncodingOption,
   EncryptionKeyInformation,
@@ -33,8 +34,12 @@ import {
   RecommendedCurve,
   TransparentDHPrivateKey,
   TransparentDHPublicKey,
+  TransparentDSAPrivateKey,
+  TransparentDSAPublicKey,
   TransparentECPrivateKey,
   TransparentECPublicKey,
+  TransparentRSAPrivateKey,
+  TransparentRSAPublicKey,
   TransparentSymmetricKey,
   WrappingMethod,
 } from "./structs/object_data_structures"
@@ -86,9 +91,14 @@ const STRUCTS = {
   KeyWrappingData,
   EncryptionKeyInformation,
   MacOrSignatureKeyInformation,
-  TransparentSymmetricKey,
+  ByteString,
   TransparentDHPrivateKey,
   TransparentDHPublicKey,
+  TransparentDSAPrivateKey,
+  TransparentDSAPublicKey,
+  TransparentSymmetricKey,
+  TransparentRSAPrivateKey,
+  TransparentRSAPublicKey,
   TransparentECPrivateKey,
   TransparentECPublicKey,
 
@@ -289,13 +299,20 @@ export function fromTTLV<T>(
 
     if (
       [
-        "TransparentSymmetricKey",
-        "TransparentDHPrivateKey",
+        "Raw",
         "TransparentDHPublicKey",
+        "TransparentDSAPrivateKey",
+        "TransparentDSAPublicKey",
+        "TransparentSymmetricKey",
+        "TransparentRSAPrivateKey",
+        "TransparentRSAPublicKey",
         "TransparentECPrivateKey",
         "TransparentECPublicKey",
       ].includes(keyFormatType.value as string)
     ) {
+      if (keyFormatType.value === "Raw") {
+        return fromTTLV(ttlv, "ByteString")
+      }
       // Now we have the KeyFormatType, we can call `fromTTLV` with the same `ttlv` but overriding the tag
       // with the KeyFormatType value. We'll not go inside the `ttlv.tag === "KeyMaterial"` condition anymore but
       // in the struct parsing below.
@@ -479,7 +496,7 @@ export function toTTLV(kmip: Serializable, tag: string | null = null): TTLV {
     return ttlv
   }
 
-  // Here we are an object. If we are at the root of the callstack,
+  // Here we are an object. If we are at the root of the call stack,
   // no `tag` will be define (so we use the tag present inside the object, often it will be
   // a request object, but in tests we sometimes serialize random objects)
   if (tag === null) {
