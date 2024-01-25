@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.1] - 2024-01-25
+
+### Bug Fixes
+
+- Fix import problem on responses/EncryptResponse
+
 ## [3.1.0] - 2024-01-25
 
 ### Features

@@ -1,5 +1,5 @@
 import * as jose from "jose"
-import { EncryptResponse } from "responses/EncryptResponse"
+import { EncryptResponse } from "./responses/EncryptResponse"
 import { deserialize, serialize } from "./kmip"
 import { Create } from "./requests/Create"
 import { CreateKeyPair } from "./requests/CreateKeyPair"
