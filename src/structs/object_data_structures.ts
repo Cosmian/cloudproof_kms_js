@@ -147,6 +147,10 @@ export class KeyBlock {
       return this.keyValue.keyMaterial.key
     }
 
+    if (this.keyValue.keyMaterial instanceof ByteString) {
+      return this.keyValue.keyMaterial.byteString
+    }
+
     throw new Error(
       `Cannot extract bytes from key of type ${typeof this.keyValue
         .keyMaterial}`,
@@ -271,11 +275,24 @@ export class MacOrSignatureKeyInformation {
 }
 
 export type KeyMaterial =
-  | TransparentSymmetricKey
+  | ByteString
   | TransparentDHPrivateKey
   | TransparentDHPublicKey
+  | TransparentDSAPrivateKey
+  | TransparentDSAPublicKey
+  | TransparentSymmetricKey
+  | TransparentRSAPrivateKey
+  | TransparentRSAPublicKey
   | TransparentECPrivateKey
   | TransparentECPublicKey
+
+export class ByteString {
+  byteString: Uint8Array
+
+  constructor(byteString: Uint8Array) {
+    this.byteString = byteString
+  }
+}
 
 export class TransparentSymmetricKey {
   key: Uint8Array
@@ -326,6 +343,104 @@ export class TransparentDHPublicKey {
     this.g = g
     this.j = j
     this.y = y
+  }
+}
+
+export class TransparentECPrivateKey {
+  tag = "TransparentECPrivateKey"
+
+  recommendedCurve: RecommendedCurve
+  d: BigInt
+
+  constructor(recommendedCurve: RecommendedCurve, d: BigInt) {
+    this.recommendedCurve = recommendedCurve
+    this.d = d
+  }
+}
+
+export class TransparentECPublicKey {
+  tag = "TransparentECPublicKey"
+
+  recommendedCurve: RecommendedCurve
+  q: BigInt
+
+  constructor(recommendedCurve: RecommendedCurve, q: BigInt) {
+    this.recommendedCurve = recommendedCurve
+    this.q = q
+  }
+}
+
+export class TransparentDSAPublicKey {
+  tag = "TransparentDSAPublicKey"
+
+  p: BigInt
+  q: BigInt
+  g: BigInt
+  y: BigInt
+
+  constructor(p: BigInt, q: BigInt, g: BigInt, y: BigInt) {
+    this.p = p
+    this.q = q
+    this.g = g
+    this.y = y
+  }
+}
+
+export class TransparentDSAPrivateKey {
+  tag = "TransparentDSAPrivateKey"
+
+  p: BigInt
+  q: BigInt
+  g: BigInt
+  x: BigInt
+
+  constructor(p: BigInt, q: BigInt, g: BigInt, x: BigInt) {
+    this.p = p
+    this.q = q
+    this.g = g
+    this.x = x
+  }
+}
+
+export class TransparentRSAPrivateKey {
+  tag = "TransparentRSAPrivateKey"
+
+  modulus: BigInt
+  privateExponent: BigInt | null = null
+  publicExponent: BigInt | null = null
+  p: BigInt | null = null
+  q: BigInt | null = null
+  primeExponentP: BigInt | null = null
+  primeExponentQ: BigInt | null = null
+
+  constructor(
+    modulus: BigInt,
+    privateExponent: BigInt | null = null,
+    publicExponent: BigInt | null = null,
+    p: BigInt | null = null,
+    q: BigInt | null = null,
+    primeExponentP: BigInt | null = null,
+    primeExponentQ: BigInt | null = null,
+  ) {
+    this.modulus = modulus
+    this.privateExponent = privateExponent
+    this.publicExponent = publicExponent
+    this.p = p
+    this.q = q
+    this.primeExponentP = primeExponentP
+    this.primeExponentQ = primeExponentQ
+  }
+}
+
+export class TransparentRSAPublicKey {
+  tag = "TransparentRSAPublicKey"
+
+  modulus: BigInt
+  publicExponent: BigInt
+
+  constructor(modulus: BigInt, publicExponent: BigInt) {
+    this.modulus = modulus
+    this.publicExponent = publicExponent
   }
 }
 
@@ -401,28 +516,4 @@ export enum RecommendedCurve {
   CURVEED25519 = 0x8000_0001,
   CURVEED448 = 0x8000_0002,
   // Extensions 8XXXXXXX
-}
-
-export class TransparentECPrivateKey {
-  tag = "TransparentECPrivateKey"
-
-  recommendedCurve: RecommendedCurve
-  d: BigInt
-
-  constructor(recommendedCurve: RecommendedCurve, d: BigInt) {
-    this.recommendedCurve = recommendedCurve
-    this.d = d
-  }
-}
-
-export class TransparentECPublicKey {
-  tag = "TransparentECPublicKey"
-
-  recommendedCurve: RecommendedCurve
-  q: BigInt
-
-  constructor(recommendedCurve: RecommendedCurve, q: BigInt) {
-    this.recommendedCurve = recommendedCurve
-    this.q = q
-  }
 }

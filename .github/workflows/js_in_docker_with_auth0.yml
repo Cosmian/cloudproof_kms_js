@@ -1,5 +1,5 @@
 ---
-name: Cloudproof Kms Javascript Library
+name: Cloudproof KMS Javascript Library
 
 on:
   workflow_call:
@@ -18,7 +18,7 @@ on:
 jobs:
   js-in-docker:
     runs-on: ubuntu-latest
-    container: cosmian/node_ci_puppeteer
+    container: node:18.0.0
 
     services:
       kms:
