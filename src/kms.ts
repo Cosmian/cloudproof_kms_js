@@ -151,7 +151,7 @@ export class KmsClient {
   /**
    * Retrieve a KMIP Object from the KMS
    * @param uniqueIdentifier the unique identifier of the object
-   * @param options Additional optional options
+   * @param options Additional options
    * @param options.unwrap does the key must be unwrapped
    * @param options.keyWrappingSpecification specifies keys and other information for wrapping the returned object
    * @param options.keyFormatType specifies the required format type (bytestring being the default value returned by server)
@@ -1196,8 +1196,6 @@ export class KmsClient {
    * Get and wrap
    * @param uniqueIdentifier the unique identifier of the object to get and wrap
    * @param encryptionKeyUniqueIdentifier the unique identifier to use to wrap the fetched key
-   * @param options Additional optional options
-   * @param options.keyFormatType specifies the required format type (bytestring being the default value returned by server)
    * @returns wrapped object
    */
   public async getWrappedKey(
@@ -1209,7 +1207,6 @@ export class KmsClient {
       new EncryptionKeyInformation(encryptionKeyUniqueIdentifier),
     )
     const object = await this.getObject(uniqueIdentifier, {
-      unwrap: true,
       keyWrappingSpecification,
     })
     return object
