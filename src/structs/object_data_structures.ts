@@ -177,13 +177,10 @@ export class KeyBlock {
 }
 
 export class KeyValue {
-  keyMaterial: Uint8Array | KeyMaterial
+  keyMaterial: KeyMaterial
   attributes: Attributes | null = null
 
-  constructor(
-    keyMaterial: Uint8Array | KeyMaterial,
-    attributes: Attributes | null = null,
-  ) {
+  constructor(keyMaterial: KeyMaterial, attributes: Attributes | null = null) {
     this.keyMaterial = keyMaterial
     this.attributes = attributes
   }
