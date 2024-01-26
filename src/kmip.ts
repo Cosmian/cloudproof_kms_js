@@ -298,8 +298,13 @@ export function fromTTLV<T>(
     }
 
     if (
+      ["Raw", "CoverCryptPublicKey", "CoverCryptSecretKey"].includes(
+        keyFormatType.value as string,
+      )
+    ) {
+      return fromTTLV(ttlv, "ByteString")
+    } else if (
       [
-        "Raw",
         "TransparentDHPublicKey",
         "TransparentDSAPrivateKey",
         "TransparentDSAPublicKey",
@@ -310,9 +315,6 @@ export function fromTTLV<T>(
         "TransparentECPublicKey",
       ].includes(keyFormatType.value as string)
     ) {
-      if (keyFormatType.value === "Raw") {
-        return fromTTLV(ttlv, "ByteString")
-      }
       // Now we have the KeyFormatType, we can call `fromTTLV` with the same `ttlv` but overriding the tag
       // with the KeyFormatType value. We'll not go inside the `ttlv.tag === "KeyMaterial"` condition anymore but
       // in the struct parsing below.

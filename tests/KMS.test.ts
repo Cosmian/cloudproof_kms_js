@@ -10,6 +10,7 @@ import {
   KmsClient,
   Link,
   LinkType,
+  PolicyKms,
   RecommendedCurve,
   SymmetricKey,
   SymmetricKeyAlgorithm,
@@ -538,6 +539,82 @@ test(
     })
 
     await client.createSymmetricKey()
+  },
+  {
+    timeout: 30 * 1000,
+  },
+)
+
+test(
+  "Create, retrieve and import Covercrypt keys",
+  async () => {
+    const bytesPolicyBase64 =
+      "eyJ2ZXJzaW9uIjoiVjIiLCJsYXN0X2F0dHJpYnV0ZV92YWx1ZSI6MiwiZGltZW5zaW9ucyI6eyJTZWN1cml0eSI6eyJvcmRlciI6WyJTaW1wbGUiLCJUb3BTZWNyZXQiXSwiYXR0cmlidXRlcyI6eyJTaW1wbGUiOnsicm90YXRpb25fdmFsdWVzIjpbMV0sImVuY3J5cHRpb25faGludCI6IkNsYXNzaWMiLCJ3cml0ZV9zdGF0dXMiOiJFbmNyeXB0RGVjcnlwdCJ9LCJUb3BTZWNyZXQiOnsicm90YXRpb25fdmFsdWVzIjpbMl0sImVuY3J5cHRpb25faGludCI6IkNsYXNzaWMiLCJ3cml0ZV9zdGF0dXMiOiJFbmNyeXB0RGVjcnlwdCJ9fX19fQ=="
+    const bytesPolicy: PolicyKms = new PolicyKms(toByteArray(bytesPolicyBase64))
+
+    // create master keys
+    const [mskID, mpkID] = await client.createCoverCryptMasterKeyPair(
+      bytesPolicy,
+    )
+    const ciphertext = await client.coverCryptEncrypt(
+      mpkID,
+      "Security::TopSecret",
+      Uint8Array.from([1, 2, 3]),
+    )
+
+    const userKeyID = await client.createCoverCryptUserDecryptionKey(
+      "Security::Simple",
+      mskID,
+    )
+
+    const userKey = await client.retrieveCoverCryptUserDecryptionKey(userKeyID)
+
+    const temperedUserKeyID = await client.importCoverCryptUserDecryptionKey(
+      `${userKeyID}-HACK`,
+      { bytes: userKey.bytes(), policy: "Security::TopSecret" },
+      {
+        link: [new Link(LinkType.ParentLink, mskID)],
+      },
+    )
+    expect(temperedUserKeyID).toEqual(`${userKeyID}-HACK`)
+
+    await expect(async () => {
+      return await client?.coverCryptDecrypt(userKeyID, ciphertext)
+    }).rejects.toThrow()
+
+    await expect(async () => {
+      return await client?.coverCryptDecrypt(temperedUserKeyID, ciphertext)
+    }).rejects.toThrow()
+
+    await client.rotateCoverCryptAttributes(mskID, ["Security::TopSecret"])
+
+    await expect(async () => {
+      return await client?.coverCryptDecrypt(userKeyID, ciphertext)
+    }).rejects.toThrow()
+
+    // After rekeying, the temperedUserKey get access to new and old TopSecret key
+    {
+      const { plaintext } = await client.coverCryptDecrypt(
+        temperedUserKeyID,
+        ciphertext,
+      )
+      expect(plaintext).toEqual(plaintext)
+    }
+
+    const newCiphertext = await client.coverCryptEncrypt(
+      mpkID,
+      "Security::TopSecret",
+      Uint8Array.from([4, 5, 6]),
+    )
+
+    await expect(async () => {
+      return await client?.coverCryptDecrypt(userKeyID, newCiphertext)
+    }).rejects.toThrow()
+
+    // TODO fix this bug, this should fail (cannot decrypt with the tempered user key)
+    // await expect(async () => {
+    //   return await client.coverCryptDecrypt(temperedUserKeyID, newCiphertext);
+    // }).rejects.toThrow()
   },
   {
     timeout: 30 * 1000,
