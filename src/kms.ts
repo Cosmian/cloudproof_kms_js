@@ -774,7 +774,7 @@ export class KmsClient {
         attributes.link = options.link
       }
 
-      const keyValue = new KeyValue(key.bytes, attributes)
+      const keyValue = new KeyValue(new ByteString(key.bytes), attributes)
       const keyBlock = new KeyBlock(
         attributes.keyFormatType,
         keyValue,
