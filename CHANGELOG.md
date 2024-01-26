@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.2] - 2024-01-26
+
+### Bug Fixes
+
+- Cover_crypt keys deserialization
+
 ## [3.1.1] - 2024-01-25
 
 ### Bug Fixes
