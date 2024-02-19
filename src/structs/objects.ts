@@ -334,42 +334,42 @@ export class RekeyActionKmsBuilder {
 
   /**
    * Create a request to rekey the master keys for the specified access policy
-   * @param accessPolicy 
+   * @param {string} accessPolicy describe the keys to renew
+   * @returns {RekeyActionKmsBuilder} chain function
    */
   public rekeyAccessPolicy(accessPolicy: string): RekeyActionKmsBuilder {
-    this._serializedAction = new TextEncoder().encode(JSON.stringify({"RekeyAccessPolicy": accessPolicy}))
+    this._serializedAction = new TextEncoder().encode(
+      JSON.stringify({ RekeyAccessPolicy: accessPolicy }),
+    )
     return this
   }
 
   /**
    * Create a request to prune the master keys for the specified access policy
-   * @param accessPolicy 
+   * @param {string} accessPolicy describe the keys to prune
+   * @returns {RekeyActionKmsBuilder} chain function
    */
   public pruneAccessPolicy(accessPolicy: string): RekeyActionKmsBuilder {
-    this._serializedAction = new TextEncoder().encode(JSON.stringify({"PruneAccessPolicy": accessPolicy}))
+    this._serializedAction = new TextEncoder().encode(
+      JSON.stringify({ PruneAccessPolicy: accessPolicy }),
+    )
     return this
   }
 
+  /**
+   * Packages the rekey action into a vendor attribute
+   * @returns {VendorAttributes} the rekey action as VendorAttributes
+   */
   public toVendorAttribute(): VendorAttributes {
-    if (!this._serializedAction) {
-      throw new Error("a RekeyAction must be properly initialized before calling toVendorAttribute.")
+    if (this._serializedAction === undefined) {
+      throw new Error(
+        "a RekeyAction must be properly initialized before calling toVendorAttribute.",
+      )
     }
     return new VendorAttributes(
       VendorAttributes.VENDOR_ID_COSMIAN,
       VendorAttributes.VENDOR_ATTR_COVER_CRYPT_REKEY_ACTION,
-      this._serializedAction
+      this._serializedAction,
     )
-    
   }
-}
-/**
- * Packages the rekey action into a vendor attribute
- * @returns {VendorAttributes} 
- */
-export function rekeyToVendorAttribute(accessPolicy: string): VendorAttributes {
-  return new VendorAttributes(
-    VendorAttributes.VENDOR_ID_COSMIAN,
-    VendorAttributes.VENDOR_ATTR_COVER_CRYPT_REKEY_ACTION,
-    new TextEncoder().encode(JSON.stringify({"RekeyAccessPolicy": accessPolicy})),
-  )
 }

@@ -590,7 +590,7 @@ test(
 
     // cannot decrypt the new top secret cipher with the tempered user key
     await expect(async () => {
-      return await client.coverCryptDecrypt(temperedUserKeyID, newCiphertext);
+      return await client.coverCryptDecrypt(temperedUserKeyID, newCiphertext)
     }).rejects.toThrow()
   },
   {

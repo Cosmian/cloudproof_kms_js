@@ -1156,7 +1156,7 @@ export class KmsClient {
    * Note: there is a limit on the number of revocations that can be performed which is set in the Policy when
    * Master Keys are created
    * @param {string} privateMasterKeyUniqueIdentifier the unique identifier of the Private Master Key
-   * @param {string[]} attributes to rotate e.g. ["Department::MKG", "Department::FIN"]
+   * @param {string} accessPolicy to rekey e.g. "Department::MKG && Department::FIN"
    * @returns {PolicyKms} returns the new Policy to use for new encryption
    */
   public async rekeyCoverCryptAccessPolicy(
@@ -1168,7 +1168,9 @@ export class KmsClient {
       new Link(LinkType.ParentLink, privateMasterKeyUniqueIdentifier),
     ]
     privateKeyAttributes.vendorAttributes = [
-      new RekeyActionKmsBuilder().rekeyAccessPolicy(accessPolicy).toVendorAttribute()
+      new RekeyActionKmsBuilder()
+        .rekeyAccessPolicy(accessPolicy)
+        .toVendorAttribute(),
     ]
     privateKeyAttributes.cryptographicAlgorithm =
       CryptographicAlgorithm.CoverCrypt
