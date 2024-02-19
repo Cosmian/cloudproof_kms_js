@@ -527,29 +527,10 @@ test(
 )
 
 test(
-  "KMS With JWE encryption",
-  async () => {
-    client.setEncryption({
-      kty: "OKP",
-      use: "enc",
-      crv: "X25519",
-      kid: "DX3GC+Fx3etxfRJValQNbqaB0gs=",
-      x: "gdF-1TtAjsFqNWr9nwhGUlFG38qrDUqYgcILgtYrpTY",
-      alg: "ECDH-ES",
-    })
-
-    await client.createSymmetricKey()
-  },
-  {
-    timeout: 30 * 1000,
-  },
-)
-
-test(
   "Create, retrieve and import Covercrypt keys",
   async () => {
     const bytesPolicyBase64 =
-      "eyJ2ZXJzaW9uIjoiVjIiLCJsYXN0X2F0dHJpYnV0ZV92YWx1ZSI6MiwiZGltZW5zaW9ucyI6eyJTZWN1cml0eSI6eyJvcmRlciI6WyJTaW1wbGUiLCJUb3BTZWNyZXQiXSwiYXR0cmlidXRlcyI6eyJTaW1wbGUiOnsicm90YXRpb25fdmFsdWVzIjpbMV0sImVuY3J5cHRpb25faGludCI6IkNsYXNzaWMiLCJ3cml0ZV9zdGF0dXMiOiJFbmNyeXB0RGVjcnlwdCJ9LCJUb3BTZWNyZXQiOnsicm90YXRpb25fdmFsdWVzIjpbMl0sImVuY3J5cHRpb25faGludCI6IkNsYXNzaWMiLCJ3cml0ZV9zdGF0dXMiOiJFbmNyeXB0RGVjcnlwdCJ9fX19fQ=="
+      "eyJ2ZXJzaW9uIjoiVjIiLCJsYXN0X2F0dHJpYnV0ZV92YWx1ZSI6MiwiZGltZW5zaW9ucyI6eyJTZWN1cml0eSI6eyJPcmRlcmVkIjp7IlNpbXBsZSI6eyJpZCI6MSwiZW5jcnlwdGlvbl9oaW50IjoiQ2xhc3NpYyIsIndyaXRlX3N0YXR1cyI6IkVuY3J5cHREZWNyeXB0In0sIlRvcFNlY3JldCI6eyJpZCI6MiwiZW5jcnlwdGlvbl9oaW50IjoiQ2xhc3NpYyIsIndyaXRlX3N0YXR1cyI6IkVuY3J5cHREZWNyeXB0In19fX19Cg=="
     const bytesPolicy: PolicyKms = new PolicyKms(toByteArray(bytesPolicyBase64))
 
     // create master keys
@@ -586,20 +567,16 @@ test(
       return await client?.coverCryptDecrypt(temperedUserKeyID, ciphertext)
     }).rejects.toThrow()
 
-    await client.rotateCoverCryptAttributes(mskID, ["Security::TopSecret"])
+    await client.rekeyCoverCryptAccessPolicy(mskID, "Security::TopSecret")
 
     await expect(async () => {
       return await client?.coverCryptDecrypt(userKeyID, ciphertext)
     }).rejects.toThrow()
 
-    // After rekeying, the temperedUserKey get access to new and old TopSecret key
-    {
-      const { plaintext } = await client.coverCryptDecrypt(
-        temperedUserKeyID,
-        ciphertext,
-      )
-      expect(plaintext).toEqual(plaintext)
-    }
+    // the temperedUserKey has not been granted access to the new nor the old TopSecret key
+    await expect(async () => {
+      return await client.coverCryptDecrypt(temperedUserKeyID, ciphertext)
+    }).rejects.toThrow()
 
     const newCiphertext = await client.coverCryptEncrypt(
       mpkID,
@@ -611,10 +588,29 @@ test(
       return await client?.coverCryptDecrypt(userKeyID, newCiphertext)
     }).rejects.toThrow()
 
-    // TODO fix this bug, this should fail (cannot decrypt with the tempered user key)
-    // await expect(async () => {
-    //   return await client.coverCryptDecrypt(temperedUserKeyID, newCiphertext);
-    // }).rejects.toThrow()
+    // cannot decrypt the new top secret cipher with the tempered user key
+    await expect(async () => {
+      return await client.coverCryptDecrypt(temperedUserKeyID, newCiphertext);
+    }).rejects.toThrow()
+  },
+  {
+    timeout: 30 * 1000,
+  },
+)
+
+test(
+  "KMS With JWE encryption",
+  async () => {
+    client.setEncryption({
+      kty: "OKP",
+      use: "enc",
+      crv: "X25519",
+      kid: "DX3GC+Fx3etxfRJValQNbqaB0gs=",
+      x: "gdF-1TtAjsFqNWr9nwhGUlFG38qrDUqYgcILgtYrpTY",
+      alg: "ECDH-ES",
+    })
+
+    await client.createSymmetricKey()
   },
   {
     timeout: 30 * 1000,

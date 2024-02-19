@@ -38,6 +38,7 @@ import {
   PolicyKms,
   PrivateKey,
   PublicKey,
+  RekeyActionKmsBuilder,
   SymmetricKey,
 } from "./structs/objects"
 import {
@@ -1158,20 +1159,16 @@ export class KmsClient {
    * @param {string[]} attributes to rotate e.g. ["Department::MKG", "Department::FIN"]
    * @returns {PolicyKms} returns the new Policy to use for new encryption
    */
-  public async rotateCoverCryptAttributes(
+  public async rekeyCoverCryptAccessPolicy(
     privateMasterKeyUniqueIdentifier: string,
-    attributes: string[],
+    accessPolicy: string,
   ): Promise<PolicyKms> {
     const privateKeyAttributes = new Attributes("PrivateKey")
     privateKeyAttributes.link = [
       new Link(LinkType.ParentLink, privateMasterKeyUniqueIdentifier),
     ]
     privateKeyAttributes.vendorAttributes = [
-      new VendorAttributes(
-        VendorAttributes.VENDOR_ID_COSMIAN,
-        VendorAttributes.VENDOR_ATTR_COVER_CRYPT_ATTR,
-        new TextEncoder().encode(JSON.stringify(attributes)),
-      ),
+      new RekeyActionKmsBuilder().rekeyAccessPolicy(accessPolicy).toVendorAttribute()
     ]
     privateKeyAttributes.cryptographicAlgorithm =
       CryptographicAlgorithm.CoverCrypt

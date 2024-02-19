@@ -141,6 +141,8 @@ export class VendorAttributes {
   public static VENDOR_ATTR_COVER_CRYPT_ACCESS_POLICY =
     "cover_crypt_access_policy"
 
+  public static VENDOR_ATTR_COVER_CRYPT_REKEY_ACTION = "cover_crypt_rekey_action"
+
   public static TAG = "tag"
 
   vendorIdentification: string

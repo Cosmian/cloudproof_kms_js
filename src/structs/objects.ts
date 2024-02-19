@@ -329,3 +329,47 @@ export class AccessPolicyKms {
     return this.fromAttributes(keyValue.attributes)
   }
 }
+export class RekeyActionKmsBuilder {
+  private _serializedAction?: Uint8Array
+
+  /**
+   * Create a request to rekey the master keys for the specified access policy
+   * @param accessPolicy 
+   */
+  public rekeyAccessPolicy(accessPolicy: string): RekeyActionKmsBuilder {
+    this._serializedAction = new TextEncoder().encode(JSON.stringify({"RekeyAccessPolicy": accessPolicy}))
+    return this
+  }
+
+  /**
+   * Create a request to prune the master keys for the specified access policy
+   * @param accessPolicy 
+   */
+  public pruneAccessPolicy(accessPolicy: string): RekeyActionKmsBuilder {
+    this._serializedAction = new TextEncoder().encode(JSON.stringify({"PruneAccessPolicy": accessPolicy}))
+    return this
+  }
+
+  public toVendorAttribute(): VendorAttributes {
+    if (!this._serializedAction) {
+      throw new Error("a RekeyAction must be properly initialized before calling toVendorAttribute.")
+    }
+    return new VendorAttributes(
+      VendorAttributes.VENDOR_ID_COSMIAN,
+      VendorAttributes.VENDOR_ATTR_COVER_CRYPT_REKEY_ACTION,
+      this._serializedAction
+    )
+    
+  }
+}
+/**
+ * Packages the rekey action into a vendor attribute
+ * @returns {VendorAttributes} 
+ */
+export function rekeyToVendorAttribute(accessPolicy: string): VendorAttributes {
+  return new VendorAttributes(
+    VendorAttributes.VENDOR_ID_COSMIAN,
+    VendorAttributes.VENDOR_ATTR_COVER_CRYPT_REKEY_ACTION,
+    new TextEncoder().encode(JSON.stringify({"RekeyAccessPolicy": accessPolicy})),
+  )
+}
