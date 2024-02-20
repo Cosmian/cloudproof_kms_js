@@ -332,11 +332,6 @@ export class AccessPolicyKms {
 export class RekeyActionKmsBuilder {
   private _serializedAction?: Uint8Array
 
-  /**
-   * Create a request to rekey the master keys for the specified access policy
-   * @param {string} accessPolicy describe the keys to renew
-   * @returns {RekeyActionKmsBuilder} chain function
-   */
   public rekeyAccessPolicy(accessPolicy: string): RekeyActionKmsBuilder {
     this._serializedAction = new TextEncoder().encode(
       JSON.stringify({ RekeyAccessPolicy: accessPolicy }),
@@ -344,14 +339,45 @@ export class RekeyActionKmsBuilder {
     return this
   }
 
-  /**
-   * Create a request to prune the master keys for the specified access policy
-   * @param {string} accessPolicy describe the keys to prune
-   * @returns {RekeyActionKmsBuilder} chain function
-   */
   public pruneAccessPolicy(accessPolicy: string): RekeyActionKmsBuilder {
     this._serializedAction = new TextEncoder().encode(
       JSON.stringify({ PruneAccessPolicy: accessPolicy }),
+    )
+    return this
+  }
+
+  public removeAttribute(attribute: string): RekeyActionKmsBuilder {
+    this._serializedAction = new TextEncoder().encode(
+      JSON.stringify({ RemoveAttribute: [attribute] }),
+    )
+    return this
+  }
+
+  public disableAttribute(attribute: string): RekeyActionKmsBuilder {
+    this._serializedAction = new TextEncoder().encode(
+      JSON.stringify({ DisableAttribute: [attribute] }),
+    )
+    return this
+  }
+
+  public addAttribute(
+    attribute: string,
+    isHybridized: boolean,
+  ): RekeyActionKmsBuilder {
+    this._serializedAction = new TextEncoder().encode(
+      JSON.stringify({
+        AddAttribute: [[attribute, isHybridized ? "Hybridized" : "Classic"]],
+      }),
+    )
+    return this
+  }
+
+  public renameAttribute(
+    attribute: string,
+    newName: string,
+  ): RekeyActionKmsBuilder {
+    this._serializedAction = new TextEncoder().encode(
+      JSON.stringify({ RenameAttribute: [[attribute, newName]] }),
     )
     return this
   }
