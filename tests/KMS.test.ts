@@ -529,14 +529,13 @@ test(
 test(
   "Create, retrieve and import Covercrypt keys",
   async () => {
-    const bytesPolicyBase64 =
-      "eyJ2ZXJzaW9uIjoiVjIiLCJsYXN0X2F0dHJpYnV0ZV92YWx1ZSI6MiwiZGltZW5zaW9ucyI6eyJTZWN1cml0eSI6eyJPcmRlcmVkIjp7IlNpbXBsZSI6eyJpZCI6MSwiZW5jcnlwdGlvbl9oaW50IjoiQ2xhc3NpYyIsIndyaXRlX3N0YXR1cyI6IkVuY3J5cHREZWNyeXB0In0sIlRvcFNlY3JldCI6eyJpZCI6MiwiZW5jcnlwdGlvbl9oaW50IjoiQ2xhc3NpYyIsIndyaXRlX3N0YXR1cyI6IkVuY3J5cHREZWNyeXB0In19fX19Cg=="
-    const bytesPolicy: PolicyKms = new PolicyKms(toByteArray(bytesPolicyBase64))
+    const bytesPolicy = new TextEncoder().encode(
+      '{"version":"V2","last_attribute_value":2,"dimensions":{"Security":{"Ordered":{"Simple":{"id":1,"encryption_hint":"Classic","write_status":"EncryptDecrypt"},"TopSecret":{"id":2,"encryption_hint":"Classic","write_status":"EncryptDecrypt"}}}}}',
+    )
+    const policy: PolicyKms = new PolicyKms(bytesPolicy)
 
     // create master keys
-    const [mskID, mpkID] = await client.createCoverCryptMasterKeyPair(
-      bytesPolicy,
-    )
+    const [mskID, mpkID] = await client.createCoverCryptMasterKeyPair(policy)
     const ciphertext = await client.coverCryptEncrypt(
       mpkID,
       "Security::TopSecret",
