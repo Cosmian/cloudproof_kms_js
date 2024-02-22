@@ -1193,16 +1193,12 @@ export class KmsClient {
   }
 
   /**
-   * Removes old keys associated to the given master keys from the master
+   * Removes old keys associated to the given access policy from the master
    * keys. This will permanently remove access to old ciphers.
+   * 
    * This will rekey in the KMS:
    * - the master keys
    * - any user key associated to the access policy
-   *
-   * Non Rekeyed User Decryption Keys cannot decrypt data encrypted with the rekeyed Master Public Key and the given
-   * attributes.
-   * Rekeyed User Decryption Keys however will be able to decrypt data encrypted by the previous Master Public Key and
-   * the rekeyed one.
    * @param {string} privateMasterKeyUniqueIdentifier the unique identifier of the Private Master Key
    * @param {string} accessPolicy to rekey e.g. "Department::MKG && Department::FIN"
    * @returns {PolicyKms} returns the new Policy to use for new encryption
@@ -1219,6 +1215,11 @@ export class KmsClient {
 
   /**
    * Remove a specific attribute from a keypair's policy.
+   * Permanently removes the ability to encrypt new ciphers and decrypt all existing ciphers associated with this attribute.
+   * 
+   * This will rekey in the KMS:
+   * - the master keys
+   * - any user decryption keys that contain one of these attributes in their policy.
    * @param {string} privateMasterKeyUniqueIdentifier the unique identifier of the Private Master Key
    * @param {string} attribute to remove e.g. "Department::HR"
    * @returns {PolicyKms} returns the new Policy to use for new encryption
@@ -1235,6 +1236,10 @@ export class KmsClient {
 
   /**
    * Disable a specific attribute from a keypair's policy.
+   * Prevents the encryption of new messages for this attribute while keeping the ability to decrypt existing ciphers.
+   * 
+   * This will rekey in the KMS:
+   * - the master keys
    * @param {string} privateMasterKeyUniqueIdentifier the unique identifier of the Private Master Key
    * @param {string} attribute to disable e.g. "Department::HR"
    * @returns {PolicyKms} returns the new Policy to use for new encryption
@@ -1251,6 +1256,9 @@ export class KmsClient {
 
   /**
    * Add a new attribute to a keypair's policy.
+   * 
+   * This will rekey in the KMS:
+   * - the master keys
    * @param {string} privateMasterKeyUniqueIdentifier the unique identifier of the Private Master Key
    * @param {string} attribute to disable e.g. "Department::HR"
    * @param {boolean} isHybridized hint for encryption
