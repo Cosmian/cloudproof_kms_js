@@ -1194,7 +1194,7 @@ export class KmsClient {
   /**
    * Removes old keys associated to the given access policy from the master
    * keys. This will permanently remove access to old ciphers.
-   * 
+   *
    * This will rekey in the KMS:
    * - the master keys
    * - any user key associated to the access policy
@@ -1214,11 +1214,12 @@ export class KmsClient {
 
   /**
    * Remove a specific attribute from a keypair's policy.
-   * Permanently removes the ability to encrypt new messages and decrypt all existing ciphers associated with this attribute.
-   * 
+   * Permanently removes the ability to encrypt new messages and decrypt all existing ciphers associated
+   * with this attribute.
+   *
    * This will rekey in the KMS:
    * - the master keys
-   * - any user decryption keys that contain one of these attributes in their policy.
+   * - any user decryption keys associated to the attribute
    * @param {string} privateMasterKeyUniqueIdentifier the unique identifier of the Private Master Key
    * @param {string} attribute to remove e.g. "Department::HR"
    * @returns {string[]} returns the updated master keys uids
@@ -1236,9 +1237,9 @@ export class KmsClient {
   /**
    * Disable a specific attribute from a keypair's policy.
    * Prevents the encryption of new messages for this attribute while keeping the ability to decrypt existing ciphers.
-   * 
+   *
    * This will rekey in the KMS:
-   * - the master keys
+   * - the master public key
    * @param {string} privateMasterKeyUniqueIdentifier the unique identifier of the Private Master Key
    * @param {string} attribute to disable e.g. "Department::HR"
    * @returns {string[]} returns the updated master keys uids
@@ -1255,11 +1256,11 @@ export class KmsClient {
 
   /**
    * Add a new attribute to a keypair's policy.
-   * 
+   *
    * This will rekey in the KMS:
    * - the master keys
    * @param {string} privateMasterKeyUniqueIdentifier the unique identifier of the Private Master Key
-   * @param {string} attribute to disable e.g. "Department::HR"
+   * @param {string} attribute to create e.g. "Department::HR"
    * @param {boolean} isHybridized hint for encryption
    * @returns {string[]} returns the updated master keys uids
    */
@@ -1277,7 +1278,7 @@ export class KmsClient {
   /**
    * Rename an attribute in a keypair's policy.
    * @param {string} privateMasterKeyUniqueIdentifier the unique identifier of the Private Master Key
-   * @param {string} attribute to disable e.g. "Department::HR"
+   * @param {string} attribute to rename e.g. "Department::HR"
    * @param {string} newName the new name for the attribute
    * @returns {string[]} returns the updated master keys uids
    */
