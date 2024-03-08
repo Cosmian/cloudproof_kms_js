@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.0] - 2024-03-08
+
+### Features
+
+- Replace CoverCrypt `rotate` with `rekey`
+- Add CoverCrypt Policy edition as KMIP Rekey requests
+
 ## [3.1.2] - 2024-01-26
 
 ### Bug Fixes
