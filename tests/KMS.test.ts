@@ -527,6 +527,177 @@ test(
 )
 
 test(
+  "Create, retrieve, import and rekey Covercrypt keys",
+  async () => {
+    // one unordered dimension policy "Security" with 2 attributes: "Classic", "TopSecret"
+    const bytesPolicy = new TextEncoder().encode(
+      '{"version":"V2","last_attribute_value":2,"dimensions":{"Security":{"Unordered":{"Simple":{"id":1,"encryption_hint":"Classic","write_status":"EncryptDecrypt"},"TopSecret":{"id":2,"encryption_hint":"Classic","write_status":"EncryptDecrypt"}}}}}',
+    )
+    const policy: PolicyKms = new PolicyKms(bytesPolicy)
+
+    // create master keys
+    const [mskID, mpkID] = await client.createCoverCryptMasterKeyPair(policy)
+    const topSecretData = Uint8Array.from([1, 2, 3])
+    const ciphertext = await client.coverCryptEncrypt(
+      mpkID,
+      "Security::TopSecret",
+      topSecretData,
+    )
+
+    const simpleUser = await client.createCoverCryptUserDecryptionKey(
+      "Security::Simple",
+      mskID,
+    )
+    const topSecretUser = await client.createCoverCryptUserDecryptionKey(
+      "Security::TopSecret",
+      mskID,
+    )
+
+    const simpleUserKey = await client.retrieveCoverCryptUserDecryptionKey(
+      simpleUser,
+    )
+
+    // Use the simple user key but pretend to have top secret access
+    const temperedUserKeyID = await client.importCoverCryptUserDecryptionKey(
+      `${simpleUser}-HACK`,
+      { bytes: simpleUserKey.bytes(), policy: "Security::TopSecret" },
+      {
+        link: [new Link(LinkType.ParentLink, mskID)],
+      },
+    )
+    expect(temperedUserKeyID).toEqual(`${simpleUser}-HACK`)
+
+    // Top secret user can read the ciphertext
+    {
+      const { plaintext } = await client.coverCryptDecrypt(
+        topSecretUser,
+        ciphertext,
+      )
+      expect(plaintext).toEqual(topSecretData)
+    }
+
+    // Simple user cannot decrypt top secret ciphertext
+    await expect(async () => {
+      return await client?.coverCryptDecrypt(simpleUser, ciphertext)
+    }).rejects.toThrow()
+
+    // Neither can the tempered user
+    await expect(async () => {
+      return await client.coverCryptDecrypt(temperedUserKeyID, ciphertext)
+    }).rejects.toThrow()
+
+    // 1 - Generate new top secret key
+
+    await client.rekeyCoverCryptAccessPolicy(mskID, "Security::TopSecret")
+
+    // Top secret user can still read the old ciphertext
+    {
+      const { plaintext } = await client.coverCryptDecrypt(
+        topSecretUser,
+        ciphertext,
+      )
+      expect(plaintext).toEqual(topSecretData)
+    }
+
+    // simple use still has no access to the top secret ciphertext
+    await expect(async () => {
+      return await client.coverCryptDecrypt(simpleUser, ciphertext)
+    }).rejects.toThrow()
+
+    // the temperedUserKey has not been granted access to the new nor the old TopSecret key
+    await expect(async () => {
+      return await client.coverCryptDecrypt(temperedUserKeyID, ciphertext)
+    }).rejects.toThrow()
+
+    const newTopSecretData = Uint8Array.from([4, 5, 6])
+    const newCiphertext = await client.coverCryptEncrypt(
+      mpkID,
+      "Security::TopSecret",
+      newTopSecretData,
+    )
+
+    // Top secret user can read the new ciphertext
+    {
+      const { plaintext } = await client.coverCryptDecrypt(
+        topSecretUser,
+        newCiphertext,
+      )
+      expect(plaintext).toEqual(newTopSecretData)
+    }
+
+    await expect(async () => {
+      return await client.coverCryptDecrypt(simpleUser, newCiphertext)
+    }).rejects.toThrow()
+
+    // cannot decrypt the new top secret cipher with the tempered user key
+    await expect(async () => {
+      return await client.coverCryptDecrypt(temperedUserKeyID, newCiphertext)
+    }).rejects.toThrow()
+
+    // 2 - Remove old top secret key
+
+    await client.pruneCoverCryptAccessPolicy(mskID, "Security::TopSecret")
+
+    // top secret user can no longer read the old ciphertext
+    await expect(async () => {
+      return await client.coverCryptDecrypt(topSecretUser, ciphertext)
+    }).rejects.toThrow()
+
+    // top secret user can still read the new ciphertext
+    {
+      const { plaintext } = await client.coverCryptDecrypt(
+        topSecretUser,
+        newCiphertext,
+      )
+      expect(plaintext).toEqual(newTopSecretData)
+    }
+
+    // 3 - Adding new attribute confidential
+    await client.addCoverCryptAttribute(mskID, "Security::Confidential", false)
+
+    // 4 - Renaming attribute
+    await client.renameCoverCryptAttribute(
+      mskID,
+      "Security::Simple",
+      "Security::Protected",
+    )
+
+    // 5 - Disable top secret attribute
+
+    await client.disableCoverCryptAttribute(mskID, "Security::TopSecret")
+
+    // encrypting data is no longer possible for this attribute
+    await expect(async () => {
+      return await client.coverCryptEncrypt(
+        mpkID,
+        "Security::TopSecret",
+        Uint8Array.from([7, 8, 9]),
+      )
+    }).rejects.toThrow()
+
+    // decryption still works
+    {
+      const { plaintext } = await client.coverCryptDecrypt(
+        topSecretUser,
+        newCiphertext,
+      )
+      expect(plaintext).toEqual(newTopSecretData)
+    }
+
+    // Removing "Top Secret" attribute
+    await client.removeCoverCryptAttribute(mskID, "Security::TopSecret")
+
+    // decrypting top secret ciphers is no longer possible
+    await expect(async () => {
+      return await client.coverCryptDecrypt(topSecretUser, newCiphertext)
+    }).rejects.toThrow()
+  },
+  {
+    timeout: 30 * 1000,
+  },
+)
+
+test(
   "KMS With JWE encryption",
   async () => {
     client.setEncryption({
@@ -539,82 +710,6 @@ test(
     })
 
     await client.createSymmetricKey()
-  },
-  {
-    timeout: 30 * 1000,
-  },
-)
-
-test(
-  "Create, retrieve and import Covercrypt keys",
-  async () => {
-    const bytesPolicyBase64 =
-      "eyJ2ZXJzaW9uIjoiVjIiLCJsYXN0X2F0dHJpYnV0ZV92YWx1ZSI6MiwiZGltZW5zaW9ucyI6eyJTZWN1cml0eSI6eyJvcmRlciI6WyJTaW1wbGUiLCJUb3BTZWNyZXQiXSwiYXR0cmlidXRlcyI6eyJTaW1wbGUiOnsicm90YXRpb25fdmFsdWVzIjpbMV0sImVuY3J5cHRpb25faGludCI6IkNsYXNzaWMiLCJ3cml0ZV9zdGF0dXMiOiJFbmNyeXB0RGVjcnlwdCJ9LCJUb3BTZWNyZXQiOnsicm90YXRpb25fdmFsdWVzIjpbMl0sImVuY3J5cHRpb25faGludCI6IkNsYXNzaWMiLCJ3cml0ZV9zdGF0dXMiOiJFbmNyeXB0RGVjcnlwdCJ9fX19fQ=="
-    const bytesPolicy: PolicyKms = new PolicyKms(toByteArray(bytesPolicyBase64))
-
-    // create master keys
-    const [mskID, mpkID] = await client.createCoverCryptMasterKeyPair(
-      bytesPolicy,
-    )
-    const ciphertext = await client.coverCryptEncrypt(
-      mpkID,
-      "Security::TopSecret",
-      Uint8Array.from([1, 2, 3]),
-    )
-
-    const userKeyID = await client.createCoverCryptUserDecryptionKey(
-      "Security::Simple",
-      mskID,
-    )
-
-    const userKey = await client.retrieveCoverCryptUserDecryptionKey(userKeyID)
-
-    const temperedUserKeyID = await client.importCoverCryptUserDecryptionKey(
-      `${userKeyID}-HACK`,
-      { bytes: userKey.bytes(), policy: "Security::TopSecret" },
-      {
-        link: [new Link(LinkType.ParentLink, mskID)],
-      },
-    )
-    expect(temperedUserKeyID).toEqual(`${userKeyID}-HACK`)
-
-    await expect(async () => {
-      return await client?.coverCryptDecrypt(userKeyID, ciphertext)
-    }).rejects.toThrow()
-
-    await expect(async () => {
-      return await client?.coverCryptDecrypt(temperedUserKeyID, ciphertext)
-    }).rejects.toThrow()
-
-    await client.rotateCoverCryptAttributes(mskID, ["Security::TopSecret"])
-
-    await expect(async () => {
-      return await client?.coverCryptDecrypt(userKeyID, ciphertext)
-    }).rejects.toThrow()
-
-    // After rekeying, the temperedUserKey get access to new and old TopSecret key
-    {
-      const { plaintext } = await client.coverCryptDecrypt(
-        temperedUserKeyID,
-        ciphertext,
-      )
-      expect(plaintext).toEqual(plaintext)
-    }
-
-    const newCiphertext = await client.coverCryptEncrypt(
-      mpkID,
-      "Security::TopSecret",
-      Uint8Array.from([4, 5, 6]),
-    )
-
-    await expect(async () => {
-      return await client?.coverCryptDecrypt(userKeyID, newCiphertext)
-    }).rejects.toThrow()
-
-    // TODO fix this bug, this should fail (cannot decrypt with the tempered user key)
-    // await expect(async () => {
-    //   return await client.coverCryptDecrypt(temperedUserKeyID, newCiphertext);
-    // }).rejects.toThrow()
   },
   {
     timeout: 30 * 1000,

@@ -38,6 +38,7 @@ import {
   PolicyKms,
   PrivateKey,
   PublicKey,
+  RekeyActionKmsBuilder,
   SymmetricKey,
 } from "./structs/objects"
 import {
@@ -1143,36 +1144,15 @@ export class KmsClient {
     return { headerMetadata, plaintext: decryptedChunks }
   }
 
-  /**
-   * Rotate the given policy attributes. This will rekey in the KMS:
-   * - the Master Keys
-   * - all User Decryption Keys that contain one of these attributes in their policy and are not rotated.
-   *
-   * Non Rekeyed User Decryption Keys cannot decrypt ata encrypted with the rekeyed Master Public Key and the given
-   * attributes.
-   * Rekeyed User Decryption Keys however will be able to decrypt data encrypted by the previous Master Public Key and
-   * the rekeyed one.
-   * Note: there is a limit on the number of revocations that can be performed which is set in the Policy when
-   * Master Keys are created
-   * @param {string} privateMasterKeyUniqueIdentifier the unique identifier of the Private Master Key
-   * @param {string[]} attributes to rotate e.g. ["Department::MKG", "Department::FIN"]
-   * @returns {PolicyKms} returns the new Policy to use for new encryption
-   */
-  public async rotateCoverCryptAttributes(
+  async processCoverCryptRekeyRequest(
     privateMasterKeyUniqueIdentifier: string,
-    attributes: string[],
-  ): Promise<PolicyKms> {
+    action: RekeyActionKmsBuilder,
+  ): Promise<string[]> {
     const privateKeyAttributes = new Attributes("PrivateKey")
     privateKeyAttributes.link = [
       new Link(LinkType.ParentLink, privateMasterKeyUniqueIdentifier),
     ]
-    privateKeyAttributes.vendorAttributes = [
-      new VendorAttributes(
-        VendorAttributes.VENDOR_ID_COSMIAN,
-        VendorAttributes.VENDOR_ATTR_COVER_CRYPT_ATTR,
-        new TextEncoder().encode(JSON.stringify(attributes)),
-      ),
-    ]
+    privateKeyAttributes.vendorAttributes = [action.toVendorAttribute()]
     privateKeyAttributes.cryptographicAlgorithm =
       CryptographicAlgorithm.CoverCrypt
     privateKeyAttributes.keyFormatType = KeyFormatType.CoverCryptSecretKey
@@ -1181,11 +1161,136 @@ export class KmsClient {
     request.privateKeyAttributes = privateKeyAttributes
 
     const response = await this.post(request)
-
-    const publicMasterKey = await this.retrieveCoverCryptPublicMasterKey(
+    return [
+      response.privateKeyUniqueIdentifier,
       response.publicKeyUniqueIdentifier,
+    ]
+  }
+
+  /**
+   * Generate new keys associated to the given access policy in the master keys.
+   * This will rekey in the KMS:
+   * - the master keys
+   * - any user key associated to the access policy
+   *
+   * Non Rekeyed User Decryption Keys cannot decrypt data encrypted with the rekeyed Master Public Key and the given
+   * attributes.
+   * Rekeyed User Decryption Keys however will be able to decrypt data encrypted by the previous Master Public Key and
+   * the rekeyed one.
+   * @param {string} privateMasterKeyUniqueIdentifier the unique identifier of the Private Master Key
+   * @param {string} accessPolicy to rekey e.g. "Department::MKG && Security Level::Confidential"
+   * @returns {string[]} returns the updated master keys uids
+   */
+  public async rekeyCoverCryptAccessPolicy(
+    privateMasterKeyUniqueIdentifier: string,
+    accessPolicy: string,
+  ): Promise<string[]> {
+    return await this.processCoverCryptRekeyRequest(
+      privateMasterKeyUniqueIdentifier,
+      new RekeyActionKmsBuilder().rekeyAccessPolicy(accessPolicy),
     )
-    return publicMasterKey.policy()
+  }
+
+  /**
+   * Removes old keys associated to the given access policy from the master
+   * keys. This will permanently remove access to old ciphers.
+   *
+   * This will rekey in the KMS:
+   * - the master keys
+   * - any user key associated to the access policy
+   * @param {string} privateMasterKeyUniqueIdentifier the unique identifier of the Private Master Key
+   * @param {string} accessPolicy to rekey e.g. "Department::MKG && Security Level::Confidential"
+   * @returns {string[]} returns the updated master keys uids
+   */
+  public async pruneCoverCryptAccessPolicy(
+    privateMasterKeyUniqueIdentifier: string,
+    accessPolicy: string,
+  ): Promise<string[]> {
+    return await this.processCoverCryptRekeyRequest(
+      privateMasterKeyUniqueIdentifier,
+      new RekeyActionKmsBuilder().pruneAccessPolicy(accessPolicy),
+    )
+  }
+
+  /**
+   * Remove a specific attribute from a keypair's policy.
+   * Permanently removes the ability to encrypt new messages and decrypt all existing ciphers associated
+   * with this attribute.
+   *
+   * This will rekey in the KMS:
+   * - the master keys
+   * - any user decryption keys associated to the attribute
+   * @param {string} privateMasterKeyUniqueIdentifier the unique identifier of the Private Master Key
+   * @param {string} attribute to remove e.g. "Department::HR"
+   * @returns {string[]} returns the updated master keys uids
+   */
+  public async removeCoverCryptAttribute(
+    privateMasterKeyUniqueIdentifier: string,
+    attribute: string,
+  ): Promise<string[]> {
+    return await this.processCoverCryptRekeyRequest(
+      privateMasterKeyUniqueIdentifier,
+      new RekeyActionKmsBuilder().removeAttribute(attribute),
+    )
+  }
+
+  /**
+   * Disable a specific attribute from a keypair's policy.
+   * Prevents the encryption of new messages for this attribute while keeping the ability to decrypt existing ciphers.
+   *
+   * This will rekey in the KMS:
+   * - the master public key
+   * @param {string} privateMasterKeyUniqueIdentifier the unique identifier of the Private Master Key
+   * @param {string} attribute to disable e.g. "Department::HR"
+   * @returns {string[]} returns the updated master keys uids
+   */
+  public async disableCoverCryptAttribute(
+    privateMasterKeyUniqueIdentifier: string,
+    attribute: string,
+  ): Promise<string[]> {
+    return await this.processCoverCryptRekeyRequest(
+      privateMasterKeyUniqueIdentifier,
+      new RekeyActionKmsBuilder().disableAttribute(attribute),
+    )
+  }
+
+  /**
+   * Add a new attribute to a keypair's policy.
+   *
+   * This will rekey in the KMS:
+   * - the master keys
+   * @param {string} privateMasterKeyUniqueIdentifier the unique identifier of the Private Master Key
+   * @param {string} attribute to create e.g. "Department::HR"
+   * @param {boolean} isHybridized hint for encryption
+   * @returns {string[]} returns the updated master keys uids
+   */
+  public async addCoverCryptAttribute(
+    privateMasterKeyUniqueIdentifier: string,
+    attribute: string,
+    isHybridized = false,
+  ): Promise<string[]> {
+    return await this.processCoverCryptRekeyRequest(
+      privateMasterKeyUniqueIdentifier,
+      new RekeyActionKmsBuilder().addAttribute(attribute, isHybridized),
+    )
+  }
+
+  /**
+   * Rename an attribute in a keypair's policy.
+   * @param {string} privateMasterKeyUniqueIdentifier the unique identifier of the Private Master Key
+   * @param {string} attribute to rename e.g. "Department::HR"
+   * @param {string} newName the new name for the attribute
+   * @returns {string[]} returns the updated master keys uids
+   */
+  public async renameCoverCryptAttribute(
+    privateMasterKeyUniqueIdentifier: string,
+    attribute: string,
+    newName: string,
+  ): Promise<string[]> {
+    return await this.processCoverCryptRekeyRequest(
+      privateMasterKeyUniqueIdentifier,
+      new RekeyActionKmsBuilder().renameAttribute(attribute, newName),
+    )
   }
 
   /**

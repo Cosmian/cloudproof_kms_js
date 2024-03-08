@@ -329,3 +329,73 @@ export class AccessPolicyKms {
     return this.fromAttributes(keyValue.attributes)
   }
 }
+export class RekeyActionKmsBuilder {
+  private _serializedAction?: Uint8Array
+
+  public rekeyAccessPolicy(accessPolicy: string): RekeyActionKmsBuilder {
+    this._serializedAction = new TextEncoder().encode(
+      JSON.stringify({ RekeyAccessPolicy: accessPolicy }),
+    )
+    return this
+  }
+
+  public pruneAccessPolicy(accessPolicy: string): RekeyActionKmsBuilder {
+    this._serializedAction = new TextEncoder().encode(
+      JSON.stringify({ PruneAccessPolicy: accessPolicy }),
+    )
+    return this
+  }
+
+  public removeAttribute(attribute: string): RekeyActionKmsBuilder {
+    this._serializedAction = new TextEncoder().encode(
+      JSON.stringify({ RemoveAttribute: [attribute] }),
+    )
+    return this
+  }
+
+  public disableAttribute(attribute: string): RekeyActionKmsBuilder {
+    this._serializedAction = new TextEncoder().encode(
+      JSON.stringify({ DisableAttribute: [attribute] }),
+    )
+    return this
+  }
+
+  public addAttribute(
+    attribute: string,
+    isHybridized: boolean,
+  ): RekeyActionKmsBuilder {
+    this._serializedAction = new TextEncoder().encode(
+      JSON.stringify({
+        AddAttribute: [[attribute, isHybridized ? "Hybridized" : "Classic"]],
+      }),
+    )
+    return this
+  }
+
+  public renameAttribute(
+    attribute: string,
+    newName: string,
+  ): RekeyActionKmsBuilder {
+    this._serializedAction = new TextEncoder().encode(
+      JSON.stringify({ RenameAttribute: [[attribute, newName]] }),
+    )
+    return this
+  }
+
+  /**
+   * Packages the rekey action into a vendor attribute
+   * @returns {VendorAttributes} the rekey action as VendorAttributes
+   */
+  public toVendorAttribute(): VendorAttributes {
+    if (this._serializedAction === undefined) {
+      throw new Error(
+        "a RekeyAction must be properly initialized before calling toVendorAttribute.",
+      )
+    }
+    return new VendorAttributes(
+      VendorAttributes.VENDOR_ID_COSMIAN,
+      VendorAttributes.VENDOR_ATTR_COVER_CRYPT_REKEY_ACTION,
+      this._serializedAction,
+    )
+  }
+}

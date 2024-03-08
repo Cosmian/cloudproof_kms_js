@@ -42,3 +42,4 @@ This table shows the minimum KMS version correspondence.
 | 3.0.x               | 4.10.0      |
 | 3.1.1               | -           |
 | 3.1.2               | 4.11.3      |
+| 4.0.0               | 4.13.0      |
