@@ -60,7 +60,6 @@ export interface KmsRequest<TResponse> {
 export class KmsClient {
   private readonly url: string
   private readonly headers: HeadersInit
-  private publicKey: jose.JWK | null = null
 
   /**
    * Instantiate a KMS Client
@@ -77,10 +76,6 @@ export class KmsClient {
     }
   }
 
-  setEncryption(publicKey: jose.JWK): void {
-    this.publicKey = publicKey
-  }
-
   /**
    * Execute a KMIP request and get a response
    * It is easier and safer to use the specialized methods of this class, for each crypto system
@@ -92,16 +87,6 @@ export class KmsClient {
   ): Promise<TResponse> {
     const kmipUrl = new URL("kmip/2_1", this.url)
     let body = serialize(request)
-
-    if (this.publicKey !== null) {
-      body = await new jose.CompactEncrypt(new TextEncoder().encode(body))
-        .setProtectedHeader({
-          alg: "ECDH-ES",
-          enc: "A256GCM",
-          kid: this.publicKey.kid,
-        })
-        .encrypt(await jose.importJWK(this.publicKey))
-    }
 
     const response = await fetch(kmipUrl, {
       method: "POST",

@@ -169,9 +169,8 @@ test(
     expect(uniqueIdentifier).toBeTypeOf("string")
 
     // recover
-    const key: SymmetricKey = await client.retrieveSymmetricKey(
-      uniqueIdentifier,
-    )
+    const key: SymmetricKey =
+      await client.retrieveSymmetricKey(uniqueIdentifier)
     expect(key.keyBlock.cryptographicAlgorithm).toEqual(
       CryptographicAlgorithm.AES,
     )
@@ -553,9 +552,8 @@ test(
       mskID,
     )
 
-    const simpleUserKey = await client.retrieveCoverCryptUserDecryptionKey(
-      simpleUser,
-    )
+    const simpleUserKey =
+      await client.retrieveCoverCryptUserDecryptionKey(simpleUser)
 
     // Use the simple user key but pretend to have top secret access
     const temperedUserKeyID = await client.importCoverCryptUserDecryptionKey(
@@ -691,25 +689,6 @@ test(
     await expect(async () => {
       return await client.coverCryptDecrypt(topSecretUser, newCiphertext)
     }).rejects.toThrow()
-  },
-  {
-    timeout: 30 * 1000,
-  },
-)
-
-test(
-  "KMS With JWE encryption",
-  async () => {
-    client.setEncryption({
-      kty: "OKP",
-      use: "enc",
-      crv: "X25519",
-      kid: "DX3GC+Fx3etxfRJValQNbqaB0gs=",
-      x: "gdF-1TtAjsFqNWr9nwhGUlFG38qrDUqYgcILgtYrpTY",
-      alg: "ECDH-ES",
-    })
-
-    await client.createSymmetricKey()
   },
   {
     timeout: 30 * 1000,
