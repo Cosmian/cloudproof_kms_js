@@ -18,11 +18,7 @@ const rolls = (fmt, env) => ({
     format: fmt,
     entryFileNames: `[name].${fmt === "cjs" ? "cjs" : "js"}`,
     name: "cloudproof_kms_js",
-    globals: {
-      jose: "jose",
-    },
   },
-  external: ["jose"],
   plugins: [
     commonjs(),
     typescript({

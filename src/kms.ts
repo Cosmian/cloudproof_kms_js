@@ -1,4 +1,3 @@
-import * as jose from "jose"
 import { EncryptResponse } from "./responses/EncryptResponse"
 import { deserialize, serialize } from "./kmip"
 import { Create } from "./requests/Create"
@@ -86,7 +85,7 @@ export class KmsClient {
     request: KmsRequest<TResponse> & { tag: string },
   ): Promise<TResponse> {
     const kmipUrl = new URL("kmip/2_1", this.url)
-    let body = serialize(request)
+    const body = serialize(request)
 
     const response = await fetch(kmipUrl, {
       method: "POST",

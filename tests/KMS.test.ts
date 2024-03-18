@@ -169,8 +169,9 @@ test(
     expect(uniqueIdentifier).toBeTypeOf("string")
 
     // recover
-    const key: SymmetricKey =
-      await client.retrieveSymmetricKey(uniqueIdentifier)
+    const key: SymmetricKey = await client.retrieveSymmetricKey(
+      uniqueIdentifier,
+    )
     expect(key.keyBlock.cryptographicAlgorithm).toEqual(
       CryptographicAlgorithm.AES,
     )
@@ -552,8 +553,9 @@ test(
       mskID,
     )
 
-    const simpleUserKey =
-      await client.retrieveCoverCryptUserDecryptionKey(simpleUser)
+    const simpleUserKey = await client.retrieveCoverCryptUserDecryptionKey(
+      simpleUser,
+    )
 
     // Use the simple user key but pretend to have top secret access
     const temperedUserKeyID = await client.importCoverCryptUserDecryptionKey(
