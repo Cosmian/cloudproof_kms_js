@@ -1,11 +1,11 @@
 ---
-version: "3"
 services:
   kms:
     container_name: kms
-    image: ghcr.io/cosmian/kms:105-removal-of-openssl-in-the-cli
+    image: ghcr.io/cosmian/kms:4.17.0
     ports:
       - 9998:9998
     # To test in local with Auth0 authentication
-    # environment:
-    # KMS_JWT_ISSUER_URI: https://kms-cosmian.eu.auth0.com/
+    environment:
+      RUST_LOG: error,cosmian_kms_server=trace
+      # KMS_JWT_ISSUER_URI: https://kms-cosmian.eu.auth0.com/
